@@ -263,7 +263,7 @@ internal sealed class MainForm : Form
         commandHeading.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         commandHeading.Controls.Add(new Label
         {
-            Text = "КОМАНДНАЯ СТРОКА",
+            Text = "ИГРОВОЙ ЧАТ",
             ForeColor = Accent,
             Font = new Font("Segoe UI Semibold", 9F),
             AutoSize = true,
@@ -343,7 +343,7 @@ internal sealed class MainForm : Form
         commandFooter.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         commandFooter.Controls.Add(new Label
         {
-            Text = "Enter — отправить  •  Команды выполняются с правами вашего аккаунта на сервере",
+            Text = "Enter — отправить  •  Сообщения и команды отправляются от вашего аккаунта на сервере",
             ForeColor = MutedText,
             AutoSize = true,
             Font = new Font("Segoe UI", 8F),
@@ -461,7 +461,7 @@ internal sealed class MainForm : Form
         string command = _commandInput.Text.Trim();
         if (command.Length == 0)
         {
-            SetCommandStatus("Введите команду, например /spawn.", false);
+            SetCommandStatus("Введите сообщение или команду, например /spawn.", false);
             _commandInput.Focus();
             return;
         }
