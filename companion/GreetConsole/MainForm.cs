@@ -16,12 +16,14 @@ internal sealed class MainForm : Form
     private static readonly Color DefaultText = Color.FromArgb(208, 218, 235);
     private static readonly Color MutedText = Color.FromArgb(139, 153, 177);
     private static readonly Color Accent = Color.FromArgb(158, 176, 255);
+    private static Color Rgb(int hex) => Color.FromArgb((hex >> 16) & 255, (hex >> 8) & 255, hex & 255);
+
     private static readonly Color[] MinecraftColors =
     [
-        Color.FromArgb(0x000000), Color.FromArgb(0x0000AA), Color.FromArgb(0x00AA00), Color.FromArgb(0x00AAAA),
-        Color.FromArgb(0xAA0000), Color.FromArgb(0xAA00AA), Color.FromArgb(0xFFAA00), Color.FromArgb(0xAAAAAA),
-        Color.FromArgb(0x555555), Color.FromArgb(0x5555FF), Color.FromArgb(0x55FF55), Color.FromArgb(0x55FFFF),
-        Color.FromArgb(0xFF5555), Color.FromArgb(0xFF55FF), Color.FromArgb(0xFFFF55), Color.FromArgb(0xFFFFFF)
+        Rgb(0x000000), Rgb(0x0000AA), Rgb(0x00AA00), Rgb(0x00AAAA),
+        Rgb(0xAA0000), Rgb(0xAA00AA), Rgb(0xFFAA00), Rgb(0xAAAAAA),
+        Rgb(0x555555), Rgb(0x5555FF), Rgb(0x55FF55), Rgb(0x55FFFF),
+        Rgb(0xFF5555), Rgb(0xFF55FF), Rgb(0xFFFF55), Rgb(0xFFFFFF)
     ];
 
     private readonly string _logPath;
