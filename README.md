@@ -56,7 +56,7 @@ GreetConsole — клиентский Fabric-мод с отдельным окн
 
 Нужны Java 21, .NET 8 SDK и интернет-доступ. Запусти `build.bat`: скрипт соберёт self-contained приложение C# и затем Fabric JAR. Итоговый файл появится в `build/libs/greetconsole-1.1.0.jar`.
 
-GitHub Actions собирает мод на Windows и публикует JAR с уже встроенным C#-приложением. Релизы находятся во вкладке [GitHub Releases](https://github.com/doniel1488-code/GreetConsole/releases).
+GitHub Actions собирает мод на Windows и публикует JAR с уже встроенным C#-приложением. Архитектура описана в [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Релизы находятся во вкладке [GitHub Releases](https://github.com/doniel1488-code/GreetConsole/releases).
 
 ## Лицензия
 
