@@ -78,6 +78,7 @@ async function refreshStatus() {
 }
 
 async function refreshLogs() {
+  if (paused) return;
   const data = await apiFetch(`/logs?since=${cursor}`);
   for (const item of data.lines || []) {
     entries.push(item);
