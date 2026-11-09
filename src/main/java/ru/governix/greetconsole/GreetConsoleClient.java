@@ -57,8 +57,7 @@ public final class GreetConsoleClient implements ClientModInitializer {
         try {
             if (companionProcess != null && companionProcess.isAlive()) {
                 companionProcess.destroy();
-                companionProcess = null;
-                LOGGER.info("GreetConsole desktop window closed.");
+                LOGGER.info("Sent close request to GreetConsole desktop window.");
                 return;
             }
 
@@ -101,6 +100,5 @@ public final class GreetConsoleClient implements ClientModInitializer {
     private void stopCompanion() {
         if (companionProcess == null || !companionProcess.isAlive()) return;
         companionProcess.destroy();
-        companionProcess = null;
     }
 }
