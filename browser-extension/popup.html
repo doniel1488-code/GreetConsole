@@ -50,29 +50,29 @@
       <div class="welcome">
         <div class="welcome-icon">⌁</div>
         <strong>Ожидание подключения</strong>
-        <p>Запусти Minecraft с модом GreetConsole 1.3.1. Журнал появится здесь автоматически.</p>
+        <p>Запусти Minecraft с модом GreetConsole 1.3.2. Если игра уже запущена, проверь версию мода и сообщение об ошибке ниже.</p>
       </div>
     </main>
 
     <section class="command-panel">
       <div class="command-heading">
-        <strong>КОМАНДНАЯ СТРОКА</strong>
-        <span>ВВОД ОТ ИМЕНИ ИГРОКА</span>
+        <strong>ИГРОВОЙ ЧАТ</strong>
+        <span>СООБЩЕНИЯ И КОМАНДЫ</span>
       </div>
       <form id="command-form" autocomplete="off">
         <span class="prompt">&gt;</span>
-        <input id="command-input" type="text" maxlength="256" placeholder="Например: /spawn" spellcheck="false" disabled>
+        <input id="command-input" type="text" maxlength="256" placeholder="Сообщение или команда, например /spawn" spellcheck="false" disabled>
         <button id="send-button" type="submit" disabled>Отправить <span>↵</span></button>
       </form>
       <div class="command-footer">
-        <span id="command-feedback">Команда будет отправлена через активный клиент Minecraft.</span>
+        <span id="command-feedback">Текст без / отправится в чат, с / — выполнится как команда.</span>
         <span class="permission-note">Права сервера сохраняются</span>
       </div>
     </section>
 
     <footer class="footer">
       <span id="player-info">Игрок не подключён</span>
-      <span>GreetConsole 1.3.1</span>
+      <span>GreetConsole 1.3.2</span>
     </footer>
   </div>
   <script src="popup.js"></script>
