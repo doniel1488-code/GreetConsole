@@ -23,6 +23,7 @@ const colorCodes = "0123456789abcdef";
 
 function apiFetch(path, options = {}) {
   const headers = new Headers(options.headers || {});
+  headers.set("X-GreetConsole-Client", "yandex-extension-v1");
   if (token) headers.set("X-GreetConsole-Token", token);
   if (options.body) headers.set("Content-Type", "application/json");
   return fetch(API + path, {
@@ -36,7 +37,10 @@ function apiFetch(path, options = {}) {
 
 async function connect() {
   try {
+    const bootstrapHeaders = new Headers();
+    bootstrapHeaders.set("X-GreetConsole-Client", "yandex-extension-v1");
     const bootstrapResponse = await fetch(API + "/bootstrap", {
+      headers: bootstrapHeaders,
       mode: "cors", cache: "no-store", credentials: "omit"
     });
     if (!bootstrapResponse.ok) {
