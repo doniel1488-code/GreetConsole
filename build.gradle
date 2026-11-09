@@ -42,6 +42,10 @@ tasks.named('compileJava') {
     dependsOn tasks.named('restoreConsoleWindowSource')
 }
 
+tasks.named('sourcesJar') {
+    dependsOn tasks.named('restoreConsoleWindowSource')
+}
+
 processResources {
     inputs.property 'version', project.version
     filesMatching('fabric.mod.json') {
