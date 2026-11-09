@@ -63,7 +63,7 @@ public final class CommandBridge implements AutoCloseable {
                     String line;
                     while (running && (line = reader.readLine()) != null) {
                         if (line.length() > 256) {
-                            sendReply(writer, "ERR\tКоманда слишком длинная (максимум 256 символов).");
+                            sendReply(writer, "ERR\tТекст слишком длинный (максимум 256 символов).");
                         } else {
                             pending.add(new PendingCommand(line, writer));
                         }
@@ -86,15 +86,18 @@ public final class CommandBridge implements AutoCloseable {
     public void drain(MinecraftClient client) {
         PendingCommand request;
         while ((request = pending.poll()) != null) {
-            String command = request.command().trim();
-            if (command.startsWith("/")) command = command.substring(1).trim();
+            String input = request.command().trim();
 
-            if (command.isEmpty()) {
-                sendReply(request.response(), "ERR\tВведите команду, например /spawn.");
+            if (input.isEmpty()) {
+                sendReply(request.response(), "ERR\tВведите сообщение или команду.");
                 continue;
             }
-            if (command.length() > 256) {
-                sendReply(request.response(), "ERR\tКоманда слишком длинная (максимум 256 символов).");
+            if (input.length() > 256) {
+                sendReply(request.response(), "ERR\tТекст слишком длинный (максимум 256 символов).");
+                continue;
+            }
+            if (input.chars().anyMatch(ch -> ch < 32 || ch == 127)) {
+                sendReply(request.response(), "ERR\tТекст содержит недопустимые управляющие символы.");
                 continue;
             }
             if (client.player == null || client.getNetworkHandler() == null) {
@@ -103,10 +106,20 @@ public final class CommandBridge implements AutoCloseable {
             }
 
             try {
-                client.getNetworkHandler().sendChatCommand(command);
-                sendReply(request.response(), "OK\tКоманда передана Minecraft: /" + command.replace('\t', ' '));
+                if (input.startsWith("/")) {
+                    String command = input.substring(1).trim();
+                    if (command.isEmpty()) {
+                        sendReply(request.response(), "ERR\tПосле / нужно указать команду.");
+                        continue;
+                    }
+                    client.getNetworkHandler().sendChatCommand(command);
+                    sendReply(request.response(), "OK\tКоманда отправлена: /" + command.replace('\t', ' '));
+                } else {
+                    client.getNetworkHandler().sendChatMessage(input);
+                    sendReply(request.response(), "OK\tСообщение отправлено в игровой чат.");
+                }
             } catch (RuntimeException error) {
-                sendReply(request.response(), "ERR\tНе удалось передать команду: " + safeMessage(error));
+                sendReply(request.response(), "ERR\tНе удалось отправить текст: " + safeMessage(error));
             }
         }
     }
