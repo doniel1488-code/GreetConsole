@@ -46,7 +46,7 @@ jobs:
       - name: Package Yandex Browser extension
         shell: pwsh
         run: |
-          Compress-Archive -Path browser-extension/* -DestinationPath build/GreetConsole-Yandex-Extension-1.0.0.zip -Force
+          Compress-Archive -Path browser-extension/* -DestinationPath build/GreetConsole-Yandex-Extension-1.0.1.zip -Force
 
       - name: Upload build outputs
         uses: actions/upload-artifact@v7
@@ -54,6 +54,6 @@ jobs:
           name: GreetConsole-1.3.0
           path: |
             build/libs/greetconsole-*.jar
-            build/GreetConsole-Yandex-Extension-1.0.0.zip
+            build/GreetConsole-Yandex-Extension-1.0.1.zip
           if-no-files-found: error
           retention-days: 30

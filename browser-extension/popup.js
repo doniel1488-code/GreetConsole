@@ -7,6 +7,7 @@ const els = Object.fromEntries([
 
 let token = null;
 let cursor = 0;
+let playerReady = false;
 let entries = [];
 let paused = false;
 let scrollWasAtBottom = true;
@@ -48,8 +49,8 @@ async function connect() {
     scheduleReconnect();
   } catch (error) {
     token = null;
-    setConnection(false, "Minecraft не найден", "Запусти игру с GreetConsole 1.3.0");
-    setFeedback("Нет связи. Запусти Minecraft с модом GreetConsole 1.3.0.", false);
+    setConnection(false, "Minecraft не найден", "Запусти игру с GreetConsole 1.3.1");
+    setFeedback("Нет связи. Запусти Minecraft с модом GreetConsole 1.3.1.", false);
     scheduleReconnect();
   }
 }
@@ -64,7 +65,8 @@ function scheduleReconnect() {
 
 async function refreshStatus() {
   const status = await apiFetch("/status");
-  if (status.connected) {
+  playerReady = !!status.connected;
+  if (playerReady) {
     setConnection(true, status.player || "Игрок подключён", status.server || "Мир загружен");
     els["player-info"].textContent = `Игрок: ${status.player || "—"}  •  ${status.server || "Minecraft"}`;
     els["command-input"].disabled = false;
@@ -325,7 +327,7 @@ els["command-form"].addEventListener("submit", async event => {
   } catch (error) {
     setFeedback(error.message || "Ошибка отправки команды.", false);
   } finally {
-    els["send-button"].disabled = !els["status-dot"].classList.contains("online");
+    els["send-button"].disabled = !playerReady;
     els["command-input"].focus();
   }
 });
