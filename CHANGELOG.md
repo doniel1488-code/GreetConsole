@@ -1,8 +1,7 @@
 # GreetConsole 1.0.0
 
-- Initial release for Minecraft 1.21.8 / Fabric.
-- Separate desktop window opened with F8.
-- Live reading of the active `logs/latest.log` file.
-- Unicode-aware display, legacy `&` / `§` formatting, HEX and ANSI color support.
-- Level filters, text search, pause/resume, clear, copy and auto-scroll.
-- Added the GreetConsole icon to Fabric metadata and the desktop window.
+- Первый релиз для Minecraft 1.21.8 / Fabric.
+- Отдельное окно рабочего стола открывается клавишей F8.
+- Чтение активного файла `logs/latest.log` в реальном времени.
+- Поддержка Unicode, стандартных кодов цветов `&` / `§`, HEX и ANSI.
+- Фильтры уровней, поиск, пауза/продолжение, очистка, копирование и автопрокрутка.
