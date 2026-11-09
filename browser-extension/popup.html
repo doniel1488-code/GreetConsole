@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GreetConsole</title>
   <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="game.css">
 </head>
 <body>
   <div class="app">
@@ -25,56 +26,73 @@
       </div>
     </header>
 
-    <section class="toolbar">
-      <div class="toolbar-left">
-        <button id="pause-button" class="tool-button" type="button">Пауза</button>
-        <button id="clear-button" class="tool-button" type="button">Очистить</button>
-        <button id="copy-button" class="tool-button" type="button">Копировать</button>
+    <nav class="view-nav" aria-label="Разделы расширения">
+      <button class="view-tab active" type="button" data-view="console-screen">
+        <span>⌁</span><b>Консоль</b><small>Журнал и чат</small>
+      </button>
+      <button class="view-tab game-tab" type="button" data-view="game-screen">
+        <span>🍔</span><b>Вкусно — и точка</b><small>Симулятор ресторана</small><i>ИГРА</i>
+      </button>
+    </nav>
+
+    <section id="console-screen" class="screen console-screen active">
+      <section class="toolbar">
+        <div class="toolbar-left">
+          <button id="pause-button" class="tool-button" type="button">Пауза</button>
+          <button id="clear-button" class="tool-button" type="button">Очистить</button>
+          <button id="copy-button" class="tool-button" type="button">Копировать</button>
+        </div>
+        <div class="toolbar-right">
+          <input id="search" class="search" type="search" placeholder="Поиск в журнале">
+          <select id="level-filter" class="filter" aria-label="Фильтр уровня">
+            <option value="ALL">Все</option>
+            <option>TRACE</option><option>DEBUG</option><option>INFO</option>
+            <option>WARN</option><option>ERROR</option><option>FATAL</option><option>OTHER</option>
+          </select>
+        </div>
+      </section>
+
+      <div class="log-meta">
+        <span>ЖУРНАЛ В РЕАЛЬНОМ ВРЕМЕНИ</span>
+        <label class="autoscroll"><input id="autoscroll" type="checkbox" checked> Автопрокрутка</label>
+        <span id="line-count">0 строк</span>
       </div>
-      <div class="toolbar-right">
-        <input id="search" class="search" type="search" placeholder="Поиск в журнале">
-        <select id="level-filter" class="filter" aria-label="Фильтр уровня">
-          <option value="ALL">Все</option>
-          <option>TRACE</option><option>DEBUG</option><option>INFO</option>
-          <option>WARN</option><option>ERROR</option><option>FATAL</option><option>OTHER</option>
-        </select>
-      </div>
+      <main id="log-view" class="log-view" aria-live="polite">
+        <div class="welcome">
+          <div class="welcome-icon">⌁</div>
+          <strong>Ожидание подключения</strong>
+          <p>Запусти Minecraft с модом GreetConsole 1.3.4. Если игра уже запущена, проверь версию мода и сообщение об ошибке ниже.</p>
+        </div>
+      </main>
+
+      <section class="command-panel">
+        <div class="command-heading">
+          <strong>ИГРОВОЙ ЧАТ</strong>
+          <span>СООБЩЕНИЯ И КОМАНДЫ</span>
+        </div>
+        <form id="command-form" autocomplete="off">
+          <span class="prompt">&gt;</span>
+          <input id="command-input" type="text" maxlength="256" placeholder="Сообщение или команда, например /spawn" spellcheck="false" disabled>
+          <button id="send-button" type="submit" disabled>Отправить <span>↵</span></button>
+        </form>
+        <div class="command-footer">
+          <span id="command-feedback">Текст без / отправится в чат, с / — выполнится как команда.</span>
+          <span class="permission-note">Права сервера сохраняются</span>
+        </div>
+      </section>
     </section>
 
-    <div class="log-meta">
-      <span>ЖУРНАЛ В РЕАЛЬНОМ ВРЕМЕНИ</span>
-      <label class="autoscroll"><input id="autoscroll" type="checkbox" checked> Автопрокрутка</label>
-      <span id="line-count">0 строк</span>
-    </div>
-    <main id="log-view" class="log-view" aria-live="polite">
-      <div class="welcome">
-        <div class="welcome-icon">⌁</div>
-        <strong>Ожидание подключения</strong>
-        <p>Запусти Minecraft с модом GreetConsole 1.3.4. Если игра уже запущена, проверь версию мода и сообщение об ошибке ниже.</p>
-      </div>
-    </main>
-
-    <section class="command-panel">
-      <div class="command-heading">
-        <strong>ИГРОВОЙ ЧАТ</strong>
-        <span>СООБЩЕНИЯ И КОМАНДЫ</span>
-      </div>
-      <form id="command-form" autocomplete="off">
-        <span class="prompt">&gt;</span>
-        <input id="command-input" type="text" maxlength="256" placeholder="Сообщение или команда, например /spawn" spellcheck="false" disabled>
-        <button id="send-button" type="submit" disabled>Отправить <span>↵</span></button>
-      </form>
-      <div class="command-footer">
-        <span id="command-feedback">Текст без / отправится в чат, с / — выполнится как команда.</span>
-        <span class="permission-note">Права сервера сохраняются</span>
-      </div>
+    <section id="game-screen" class="screen game-screen" hidden>
+      <div id="game-root"></div>
     </section>
 
     <footer class="footer">
       <span id="player-info">Игрок не подключён</span>
-      <span>GreetConsole 1.3.4</span>
+      <span>GreetConsole 1.3.4 · Extension 1.0.4</span>
     </footer>
   </div>
   <script src="popup.js"></script>
+  <script src="game.js"></script>
+  <script src="navigation.js"></script>
 </body>
 </html>
