@@ -43,6 +43,8 @@ Resources:
 
 Closing the window with its X button hides it; it does not stop log capture. The background reader stops when Minecraft exits.
 
+The release JAR includes the GreetConsole icon as the Fabric mod icon and as the desktop window icon. Download the latest build from [GitHub Releases](https://github.com/doniel1488-code/GreetConsole/releases/latest).
+
 ## Build from source (Windows)
 
 Run `build.bat`. It downloads Gradle 8.14.3 into `%LOCALAPPDATA%\\GreetConsole` on first run, then builds the mod. The remapped JAR is written to `build\\libs\\greetconsole-1.0.0.jar`.
