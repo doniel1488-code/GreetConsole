@@ -271,8 +271,15 @@ public final class BrowserBridge implements AutoCloseable {
 
     private boolean prepare(HttpExchange exchange, String expectedMethod) throws IOException {
         String origin = exchange.getRequestHeaders().getFirst("Origin");
-        if (!EXTENSION_ORIGIN.equals(origin)) {
-            sendError(exchange, 403, "Доступ разрешён только расширению GreetConsole.");
+        String normalizedOrigin = origin == null ? "" : origin.trim().replaceAll("/+$", "");
+        if (!EXTENSION_ORIGIN.equalsIgnoreCase(normalizedOrigin)) {
+            String received = origin == null ? "<Origin отсутствует>" : origin;
+            String method = exchange.getRequestMethod();
+            String path = exchange.getRequestURI().getPath();
+            sendError(exchange, 403,
+                    "Origin не совпадает. Получено: " + received
+                            + " | Ожидается: " + EXTENSION_ORIGIN
+                            + " | Запрос: " + method + " " + path);
             return false;
         }
 
