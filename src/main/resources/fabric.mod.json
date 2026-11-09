@@ -3,13 +3,17 @@
   "id": "greetconsole",
   "version": "${version}",
   "name": "GreetConsole",
-  "description": "A separate desktop console window for live Minecraft logs, with legacy and HEX color support.",
-  "authors": ["Governix"],
+  "description": "Fabric client mod that launches a standalone C# Windows desktop window for live Minecraft logs.",
+  "authors": [
+    "Governix"
+  ],
   "license": "MIT",
   "icon": "assets/greetconsole/icon.png",
   "environment": "client",
   "entrypoints": {
-    "client": ["ru.governix.greetconsole.GreetConsoleClient"]
+    "client": [
+      "ru.governix.greetconsole.GreetConsoleClient"
+    ]
   },
   "depends": {
     "fabricloader": ">=0.16.0",
