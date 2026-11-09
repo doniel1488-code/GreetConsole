@@ -210,7 +210,8 @@ internal sealed class MainForm : Form
 
             using var memory = new MemoryStream();
             stream.CopyTo(memory);
-            ProcessBytes(memory.ToArray(), memory.ToArray().Length);
+            byte[] initialBytes = memory.ToArray();
+            ProcessBytes(initialBytes, initialBytes.Length);
             _position = stream.Length;
             RebuildLog();
         }
