@@ -1,58 +1,75 @@
 # GreetConsole 1.0.0 — Minecraft 1.21.8 (Fabric)
 
-![GreetConsole icon](src/main/resources/assets/greetconsole/icon.png)
+![Иконка GreetConsole](src/main/resources/assets/greetconsole/icon.png)
 
-GreetConsole opens a separate Windows desktop window for the live Minecraft client log. It reads the active `logs/latest.log` file from the current Minecraft game directory, including custom launcher game directories.
+GreetConsole открывает **отдельное окно рабочего стола** с журналом Minecraft в реальном времени. Это не экран внутри игры: окно можно переключать через Alt+Tab, перемещать и изменять его размер.
 
-## Features
+## Как открыть консоль
 
-- Press **F8** in Minecraft to show or hide the separate desktop window.
-- Reads existing log history, then follows new lines without blocking the game thread.
-- Retains the latest 5,000 lines in memory.
-- Filters: TRACE, DEBUG, INFO, WARN, ERROR, FATAL and OTHER.
-- Search, pause/resume, clear, copy and auto-scroll.
-- UTF-8 / Unicode text, Cyrillic, Latin, symbols and emoji using system fallback fonts.
-- Color formats:
-  - Legacy Minecraft `&0`–`&f` and `§0`–`§f`.
-  - Styles: `&l`, `&o`, `&n`, `&m`, `&r`.
-  - HEX: `&#RRGGBB`.
-  - Repeated HEX: `&x&F&F&5&5&0&0` / `§x§F§F§5§5§0§0`.
-  - ANSI SGR, including 24-bit RGB and 256-color sequences.
+1. Запусти Minecraft с Fabric и зайди в мир или на сервер.
+2. Нажми **F8** — появится отдельное окно GreetConsole.
+3. Нажми **F8** ещё раз, чтобы скрыть или снова показать окно.
+4. Кнопка **X** в заголовке окна тоже скрывает его. Сбор логов при этом продолжается.
 
-The original Minecraft log file is never modified. `&k` is accepted as a formatting marker, but obfuscation is intentionally not applied so log text stays readable.
+**Стандартная клавиша — F8.** Её можно изменить в Minecraft: **Настройки → Управление → Назначение клавиш → GreetConsole → Открыть GreetConsole**. Если F8 занята другим модом или программой, назначь свободную клавишу.
 
-## Requirements
+## Что умеет консоль
+
+- Читает активный файл `logs/latest.log` из текущей папки игры. Работает и с нестандартной папкой, которую использует лаунчер.
+- Показывает последние строки журнала при первом открытии, затем подхватывает новые строки автоматически.
+- Хранит в памяти последние 5 000 строк.
+- Фильтрует сообщения по уровням TRACE, DEBUG, INFO, WARN, ERROR, FATAL и OTHER.
+- Имеет поиск, подсветку совпадений, паузу, очистку, копирование и автопрокрутку.
+- Поддерживает UTF-8, кириллицу, латиницу, символы и эмодзи (если для них есть шрифт в системе).
+
+### Цвета и форматирование
+
+- Стандартные цвета Minecraft: `&0`–`&f` и `§0`–`§f`.
+- Форматирование: `&l` (жирный), `&o` (курсив), `&n` (подчёркивание), `&m` (зачёркивание), `&r` (сброс).
+- HEX: `&#RRGGBB`, например `&#FF5500`.
+- Расширенный HEX: `&x&F&F&5&5&0&0` и вариант с символом `§`.
+- ANSI SGR, включая RGB (24-bit) и палитру из 256 цветов.
+
+Исходный `latest.log` мод не изменяет. Код `&k` распознаётся как маркер форматирования, но обфускация текста намеренно не применяется — строки журнала остаются читаемыми.
+
+## Установка
+
+Требуются:
 
 - Minecraft Java Edition **1.21.8**.
-- Java **21**.
-- Fabric Loader.
-- Fabric API for Minecraft 1.21.8.
+- **Java 21**.
+- **Fabric Loader**.
+- **Fabric API** для Minecraft 1.21.8.
 
-Resources:
-- [Fabric Loader installer](https://fabricmc.net/use/installer/)
-- [Fabric API for Minecraft 1.21.8](https://modrinth.com/mod/fabric-api/versions?g=1.21.8&l=fabric)
+Полезные ссылки:
+
+- [Официальный установщик Fabric Loader](https://fabricmc.net/use/installer/)
+- [Fabric API для Minecraft 1.21.8 на Modrinth](https://modrinth.com/mod/fabric-api/versions?g=1.21.8&l=fabric)
 - [Java 21 — Eclipse Temurin](https://adoptium.net/temurin/releases/?version=21)
-- [Fabric mod installation guide](https://docs.fabricmc.net/players/installing-mods)
+- [Официальная инструкция по установке модов Fabric](https://docs.fabricmc.net/players/installing-mods)
 
-## Installation
+Установка:
 
-1. Install Fabric Loader for Minecraft 1.21.8.
-2. Put the GreetConsole JAR and Fabric API JAR into `.minecraft/mods` (or the `mods` folder of the active game directory).
-3. Launch the Fabric 1.21.8 profile.
-4. Press **F8** to open the separate log window.
+1. Установи Fabric Loader для Minecraft 1.21.8.
+2. Помести JAR-файл GreetConsole и JAR-файл Fabric API в папку `mods` активной директории Minecraft.
+3. Запусти профиль Fabric 1.21.8.
+4. В игре нажми **F8**.
 
-Closing the window with its X button hides it; it does not stop log capture. The background reader stops when Minecraft exits.
+## Если окно не появляется
 
-The release JAR includes the GreetConsole icon as the Fabric mod icon and as the desktop window icon. Download the latest build from [GitHub Releases](https://github.com/doniel1488-code/GreetConsole/releases/latest).
+1. Убедись, что в списке модов есть GreetConsole и Minecraft запущен именно с профилем Fabric 1.21.8.
+2. Открой **Настройки → Управление → Назначение клавиш → GreetConsole** и проверь назначенную клавишу. При конфликте выбери другую.
+3. Проверь `logs/latest.log` в папке игры. При успешной загрузке там есть сообщение `GreetConsole initialized. Press F8 to open the separate log window.`
+4. Если мод загружен, клавиша назначена, но отдельное окно всё равно не появляется, приложи `latest.log` к сообщению об ошибке.
 
-## Build from source (Windows)
+## Сборка из исходников (Windows)
 
-Run `build.bat`. It downloads Gradle 8.14.3 into `%LOCALAPPDATA%\\GreetConsole` on first run, then builds the mod. The remapped JAR is written to `build\\libs\\greetconsole-1.0.0.jar`.
+Запусти `build.bat`. При первом запуске скрипт скачает Gradle 8.14.3 в `%LOCALAPPDATA%\\GreetConsole`, затем соберёт мод. Готовый JAR появится в `build\\libs\\greetconsole-1.0.0.jar`.
 
-The desktop-window Java source is stored as a gzip-compressed text file in the repository and is restored automatically by Gradle before compilation. This does not affect the resulting JAR.
+Исходный код окна хранится в репозитории в сжатом виде и автоматически восстанавливается Gradle перед компиляцией.
 
-GitHub Actions builds the mod on every push to `main` and uploads the remapped JAR as a workflow artifact. Tags named `v*` publish GitHub Releases.
+GitHub Actions собирает мод при каждом push в `main` и публикует JAR как артефакт сборки. Релизы находятся во вкладке [GitHub Releases](https://github.com/doniel1488-code/GreetConsole/releases).
 
-## License
+## Лицензия
 
 MIT.
