@@ -21,27 +21,6 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
-def consoleSourceGzip = file('src/main/java/ru/governix/greetconsole/ConsoleWindow.java.gz')
-def consoleSourceJava = file('src/main/java/ru/governix/greetconsole/ConsoleWindow.java')
-
-tasks.register('restoreConsoleWindowSource') {
-    inputs.file consoleSourceGzip
-    outputs.file consoleSourceJava
-    doLast {
-        if (!consoleSourceGzip.isFile()) {
-            throw new GradleException("Missing compressed ConsoleWindow.java source: ${consoleSourceGzip}")
-        }
-        consoleSourceJava.parentFile.mkdirs()
-        new java.util.zip.GZIPInputStream(new java.io.FileInputStream(consoleSourceGzip)).withCloseable { input ->
-            consoleSourceJava.withOutputStream { output -> input.transferTo(output) }
-        }
-    }
-}
-
-tasks.named('compileJava') {
-    dependsOn tasks.named('restoreConsoleWindowSource')
-}
-
 processResources {
     inputs.property 'version', project.version
     filesMatching('fabric.mod.json') {
