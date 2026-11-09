@@ -257,7 +257,9 @@ public final class BrowserBridge implements AutoCloseable {
             boolean accepted = !message.startsWith("Не удалось")
                     && !message.startsWith("Сначала")
                     && !message.startsWith("Пустая")
-                    && !message.startsWith("Текст слишком");
+                    && !message.startsWith("Текст слишком")
+                    && !message.startsWith("Текст содержит")
+                    && !message.startsWith("После /");
             JsonObject response = new JsonObject();
             response.addProperty("ok", accepted);
             response.addProperty("message", message);
