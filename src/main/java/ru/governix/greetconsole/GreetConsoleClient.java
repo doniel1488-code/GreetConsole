@@ -57,9 +57,6 @@ public final class GreetConsoleClient implements ClientModInitializer {
         try {
             if (companionProcess != null && companionProcess.isAlive()) {
                 companionProcess.destroy();
-                if (!companionProcess.waitFor(900, java.util.concurrent.TimeUnit.MILLISECONDS)) {
-                    companionProcess.destroyForcibly();
-                }
                 companionProcess = null;
                 LOGGER.info("GreetConsole desktop window closed.");
                 return;
@@ -104,14 +101,6 @@ public final class GreetConsoleClient implements ClientModInitializer {
     private void stopCompanion() {
         if (companionProcess == null || !companionProcess.isAlive()) return;
         companionProcess.destroy();
-        try {
-            if (!companionProcess.waitFor(900, java.util.concurrent.TimeUnit.MILLISECONDS)) {
-                companionProcess.destroyForcibly();
-            }
-        } catch (InterruptedException error) {
-            Thread.currentThread().interrupt();
-            companionProcess.destroyForcibly();
-        }
         companionProcess = null;
     }
 }
