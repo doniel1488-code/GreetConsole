@@ -10,7 +10,7 @@ GreetConsole opens a separate Windows desktop window for the live Minecraft clie
 - Reads existing log history, then follows new lines without blocking the game thread.
 - Retains the latest 5,000 lines in memory.
 - Filters: TRACE, DEBUG, INFO, WARN, ERROR, FATAL and OTHER.
-- Search with highlighted matches, pause/resume, clear, copy and auto-scroll.
+- Search, pause/resume, clear, copy and auto-scroll.
 - UTF-8 / Unicode text, Cyrillic, Latin, symbols and emoji using system fallback fonts.
 - Color formats:
   - Legacy Minecraft `&0`–`&f` and `§0`–`§f`.
@@ -47,7 +47,9 @@ Closing the window with its X button hides it; it does not stop log capture. The
 
 Run `build.bat`. It downloads Gradle 8.14.3 into `%LOCALAPPDATA%\\GreetConsole` on first run, then builds the mod. The remapped JAR is written to `build\\libs\\greetconsole-1.0.0.jar`.
 
-Manual build requirements: Java 21 and Gradle 8.14.3. GitHub Actions also builds the mod on every push to `main` and uploads the remapped JAR as a workflow artifact.
+The desktop-window Java source is stored as a gzip-compressed text file in the repository and is restored automatically by Gradle before compilation. This does not affect the resulting JAR.
+
+GitHub Actions builds the mod on every push to `main` and uploads the remapped JAR as a workflow artifact. Tags named `v*` publish GitHub Releases.
 
 ## License
 

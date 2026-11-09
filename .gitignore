@@ -1,0 +1,6 @@
+.gradle/
+build/
+.idea/
+*.iml
+.check/
+src/main/java/ru/governix/greetconsole/ConsoleWindow.java

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "greetconsole",
+  "version": "${version}",
+  "name": "GreetConsole",
+  "description": "A separate desktop console window for live Minecraft logs, with legacy and HEX color support.",
+  "authors": ["Governix"],
+  "license": "MIT",
+  "icon": "assets/greetconsole/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["ru.governix.greetconsole.GreetConsoleClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.8",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
