@@ -49,8 +49,9 @@ async function connect() {
     scheduleReconnect();
   } catch (error) {
     token = null;
-    setConnection(false, "Minecraft не найден", "Запусти игру с GreetConsole 1.3.1");
-    setFeedback("Нет связи. Запусти Minecraft с модом GreetConsole 1.3.1.", false);
+    const reason = error && error.message ? error.message : String(error);
+    setConnection(false, "Нет связи с модом", reason.slice(0, 90));
+    setFeedback("Не удалось подключиться к локальному мосту: " + reason, false);
     scheduleReconnect();
   }
 }
@@ -275,7 +276,7 @@ els["pause-button"].addEventListener("click", () => {
   els["pause-button"].textContent = paused ? "Продолжить" : "Пауза";
   if (paused) {
     if (reconnectTimer) clearTimeout(reconnectTimer);
-    setFeedback("Обновление журнала приостановлено. Командная строка доступна.", true);
+    setFeedback("Журнал на паузе. Отправка сообщений и команд доступна.", true);
   } else {
     renderLogs();
     scheduleReconnect();
@@ -306,7 +307,7 @@ els["log-view"].addEventListener("scroll", () => {
 els["command-form"].addEventListener("submit", async event => {
   event.preventDefault();
   const command = els["command-input"].value.trim();
-  if (!command) { setFeedback("Сначала введи команду.", false); return; }
+  if (!command) { setFeedback("Введи сообщение или команду.", false); return; }
   if (!token) { setFeedback("Minecraft не подключён.", false); return; }
 
   els["send-button"].disabled = true;
@@ -320,9 +321,9 @@ els["command-form"].addEventListener("submit", async event => {
       commandHistory = [...new Set(commandHistory)].slice(0, 50);
       historyIndex = 0;
       els["command-input"].value = "";
-      setFeedback(result.message || "Команда передана Minecraft.", true);
+      setFeedback(result.message || "Текст передан Minecraft.", true);
     } else {
-      setFeedback(result.message || "Команда не отправлена.", false);
+      setFeedback(result.message || "Текст не отправлен.", false);
     }
   } catch (error) {
     setFeedback(error.message || "Ошибка отправки команды.", false);
