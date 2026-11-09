@@ -39,7 +39,10 @@ async function connect() {
     const bootstrapResponse = await fetch(API + "/bootstrap", {
       mode: "cors", cache: "no-store", credentials: "omit"
     });
-    if (!bootstrapResponse.ok) throw new Error("Minecraft bridge не отвечает.");
+    if (!bootstrapResponse.ok) {
+      const errorData = await bootstrapResponse.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP ${bootstrapResponse.status}: локальный мост не отвечает`);
+    }
     const bootstrap = await bootstrapResponse.json();
     token = bootstrap.token;
     cursor = 0;
@@ -99,7 +102,9 @@ async function poll() {
     scheduleReconnect();
   } catch (error) {
     token = null;
-    setConnection(false, "Соединение потеряно", "Повторное подключение…");
+    const reason = error && error.message ? error.message : String(error);
+    setConnection(false, "Соединение потеряно", reason.slice(0, 90));
+    setFeedback("Связь с модом потеряна: " + reason, false);
     els["command-input"].disabled = true;
     els["send-button"].disabled = true;
     scheduleReconnect();
