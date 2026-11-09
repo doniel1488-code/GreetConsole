@@ -28,6 +28,12 @@ jobs:
         with:
           gradle-version: '8.14.3'
 
+      - name: Inspect desktop window implementation
+        shell: bash
+        run: |
+          gzip -dc src/main/java/ru/governix/greetconsole/ConsoleWindow.java.gz > /tmp/ConsoleWindow.java
+          sed -n '1,320p' /tmp/ConsoleWindow.java
+
       - name: Build and remap mod
         run: gradle --no-daemon clean build
 
