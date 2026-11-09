@@ -2,17 +2,20 @@ name: Publish GreetConsole Release
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  publish:
+    if: startsWith(github.event.head_commit.message, 'release:')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: Checkout release commit
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
 
       - name: Set up Java 21
         uses: actions/setup-java@v5
@@ -28,11 +31,39 @@ jobs:
       - name: Build and remap mod
         run: gradle --no-daemon clean build
 
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(awk -F= '$1 == "mod_version" {print $2}' gradle.properties | tr -d '\r')"
+          test -n "$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: GreetConsole ${{ github.ref_name }}
-          generate_release_notes: true
+          tag_name: v${{ steps.version.outputs.version }}
+          name: GreetConsole ${{ steps.version.outputs.version }}
+          body: |
+            ## GreetConsole ${{ steps.version.outputs.version }}
+
+            Клиентский Fabric-мод для Minecraft 1.21.8. Открывает отдельное окно Windows с живым журналом Minecraft.
+
+            - **F8** — показать или скрыть окно.
+            - Читает активный `logs/latest.log`, включая пользовательскую папку игры.
+            - Фильтры TRACE / DEBUG / INFO / WARN / ERROR / FATAL.
+            - Поиск, пауза, очистка, копирование и автопрокрутка.
+            - Unicode, кириллица, стандартные `&` / `§` коды, HEX `&#RRGGBB`, расширенный HEX и ANSI RGB / 256 цветов.
+
+            Требуются Minecraft Java Edition 1.21.8, Java 21, Fabric Loader и Fabric API.
+
+            - [Установщик Fabric Loader](https://fabricmc.net/use/installer/)
+            - [Fabric API 0.136.1+1.21.8](https://modrinth.com/mod/fabric-api/versions?g=1.21.8&l=fabric)
+            - [Java 21 (Eclipse Temurin)](https://adoptium.net/temurin/releases/?version=21)
+            - [Инструкция по установке модов Fabric](https://docs.fabricmc.net/players/installing-mods)
+
+            Исходный код: https://github.com/doniel1488-code/GreetConsole
           files: build/libs/greetconsole-*.jar
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
