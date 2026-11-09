@@ -154,7 +154,7 @@ public final class BrowserBridge implements AutoCloseable {
         response.addProperty("ok", true);
         response.addProperty("token", token);
         response.addProperty("port", PORT);
-        response.addProperty("version", "1.3.2");
+        response.addProperty("version", "1.3.3");
         sendJson(exchange, 200, response);
     }
 
