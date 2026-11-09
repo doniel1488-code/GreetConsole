@@ -307,7 +307,7 @@ internal sealed class MainForm : Form
         _commandInput.ForeColor = DefaultText;
         _commandInput.BorderStyle = BorderStyle.FixedSingle;
         _commandInput.Font = new Font("Consolas", 11F);
-        _commandInput.PlaceholderText = "Например: /spawn или /home";
+        _commandInput.PlaceholderText = "Сообщение или команда, например /spawn";
         _commandInput.MaxLength = 256;
         _commandInput.Margin = new Padding(0, 0, 8, 0);
         _commandInput.KeyDown += (_, e) =>
@@ -468,7 +468,7 @@ internal sealed class MainForm : Form
 
         if (command.Length > 256)
         {
-            SetCommandStatus("Команда слишком длинная (максимум 256 символов).", false);
+            SetCommandStatus("Текст слишком длинный (максимум 256 символов).", false);
             return;
         }
 
