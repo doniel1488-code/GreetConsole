@@ -11,8 +11,8 @@ permissions:
 
 jobs:
   build:
-    name: Build Minecraft 1.21.8 mod
-    runs-on: ubuntu-latest
+    name: Build Minecraft 1.21.8 mod and Windows companion
+    runs-on: windows-latest
     steps:
       - name: Checkout source
         uses: actions/checkout@v6
@@ -23,18 +23,30 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.14.3'
 
-      - name: Build and remap mod
+      - name: Publish self-contained C# desktop window
+        shell: pwsh
+        run: |
+          dotnet publish companion/GreetConsole/GreetConsole.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --output companion/publish
+          if (!(Test-Path companion/publish/GreetConsole.exe)) { throw "C# desktop companion executable was not produced." }
+          Copy-Item companion/publish/GreetConsole.exe src/main/resources/assets/greetconsole/GreetConsole.exe -Force
+
+      - name: Build and remap Fabric mod
         run: gradle --no-daemon clean build
 
       - name: Upload remapped JAR
         uses: actions/upload-artifact@v7
         with:
-          name: GreetConsole-Minecraft-1.21.8
+          name: GreetConsole-Minecraft-1.21.8-Windows
           path: build/libs/greetconsole-*.jar
           if-no-files-found: error
           retention-days: 30
