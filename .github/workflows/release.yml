@@ -10,7 +10,7 @@ permissions:
 jobs:
   publish:
     if: startsWith(github.event.head_commit.message, 'release:')
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout release commit
         uses: actions/checkout@v6
@@ -23,21 +23,33 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.14.3'
 
-      - name: Build and remap mod
+      - name: Publish self-contained C# desktop window
+        shell: pwsh
+        run: |
+          dotnet publish companion/GreetConsole/GreetConsole.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --output companion/publish
+          if (!(Test-Path companion/publish/GreetConsole.exe)) { throw "C# desktop companion executable was not produced." }
+          Copy-Item companion/publish/GreetConsole.exe src/main/resources/assets/greetconsole/GreetConsole.exe -Force
+
+      - name: Build and remap Fabric mod
         run: gradle --no-daemon clean build
 
       - name: Read version
         id: version
-        shell: bash
+        shell: pwsh
         run: |
-          VERSION="$(awk -F= '$1 == "mod_version" {print $2}' gradle.properties | tr -d '\r')"
-          test -n "$VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          $version = (Get-Content gradle.properties | Where-Object { $_ -match '^mod_version=' }) -replace '^mod_version=', ''
+          if ([string]::IsNullOrWhiteSpace($version)) { throw "mod_version was not found." }
+          "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -47,16 +59,15 @@ jobs:
           body: |
             ## GreetConsole ${{ steps.version.outputs.version }}
 
-            Клиентский Fabric-мод для Minecraft 1.21.8. Открывает отдельное окно Windows с живым журналом Minecraft. В версии 1.0.1 добавлены команда `/greetconsole` и диагностика ошибок AWT/Swing.
+            Fabric-мод для Minecraft 1.21.8. Окно журнала полностью вынесено в отдельное приложение Windows на C# / WinForms — оно не зависит от AWT и графического окружения Java.
 
-            - **F8** или команда **/greetconsole** — показать или скрыть окно.
-            - В `latest.log` фиксируются нажатия клавиши и ошибки создания отдельного окна.
-            - Читает активный `logs/latest.log`, включая пользовательскую папку игры.
-            - Фильтры TRACE / DEBUG / INFO / WARN / ERROR / FATAL.
-            - Поиск, пауза, очистка, копирование и автопрокрутка.
-            - Unicode, кириллица, стандартные `&` / `§` коды, HEX `&#RRGGBB`, расширенный HEX и ANSI RGB / 256 цветов.
+            - **F8** — запустить или закрыть отдельное окно.
+            - Окно самостоятельно читает `logs/latest.log` в реальном времени.
+            - Самостоятельная установка .NET не требуется: приложение C# встроено в JAR и публикуется как self-contained Windows x64.
+            - Поиск, фильтры TRACE / DEBUG / INFO / WARN / ERROR / FATAL, пауза, очистка, копирование и автопрокрутка.
+            - Unicode, кириллица, Minecraft-коды `&` / `§`, HEX `&#RRGGBB`, расширенный HEX и ANSI RGB / 256 цветов.
 
-            Требуются Minecraft Java Edition 1.21.8, Java 21, Fabric Loader и Fabric API.
+            Установка: замени старый JAR в папке `mods` этим файлом. Требуются Minecraft Java Edition 1.21.8, Java 21, Fabric Loader и Fabric API.
 
             - [Установщик Fabric Loader](https://fabricmc.net/use/installer/)
             - [Fabric API 0.136.1+1.21.8](https://modrinth.com/mod/fabric-api/versions?g=1.21.8&l=fabric)
