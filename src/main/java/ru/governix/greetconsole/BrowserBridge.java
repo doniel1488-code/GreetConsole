@@ -110,19 +110,18 @@ public final class BrowserBridge implements AutoCloseable {
     public void drain(MinecraftClient client) {
         PendingCommand request;
         while ((request = pendingCommands.poll()) != null) {
-            String command = request.command().trim();
-            if (command.startsWith("/")) command = command.substring(1).trim();
+            String input = request.command().trim();
 
-            if (command.isEmpty()) {
-                request.response().complete("Пустая команда.");
+            if (input.isEmpty()) {
+                request.response().complete("Пустое сообщение.");
                 continue;
             }
-            if (command.length() > MAX_COMMAND_LENGTH) {
-                request.response().complete("Команда слишком длинная (максимум 256 символов).");
+            if (input.length() > MAX_COMMAND_LENGTH) {
+                request.response().complete("Текст слишком длинный (максимум 256 символов).");
                 continue;
             }
-            if (command.chars().anyMatch(ch -> ch < 32 || ch == 127)) {
-                request.response().complete("Команда содержит недопустимые управляющие символы.");
+            if (input.chars().anyMatch(ch -> ch < 32 || ch == 127)) {
+                request.response().complete("Текст содержит недопустимые управляющие символы.");
                 continue;
             }
             if (client.player == null || client.getNetworkHandler() == null) {
@@ -131,10 +130,20 @@ public final class BrowserBridge implements AutoCloseable {
             }
 
             try {
-                client.getNetworkHandler().sendChatCommand(command);
-                request.response().complete("Команда передана игровому клиенту: /" + command);
+                if (input.startsWith("/")) {
+                    String command = input.substring(1).trim();
+                    if (command.isEmpty()) {
+                        request.response().complete("После / нужно указать команду.");
+                        continue;
+                    }
+                    client.getNetworkHandler().sendChatCommand(command);
+                    request.response().complete("Команда отправлена: /" + command);
+                } else {
+                    client.getNetworkHandler().sendChatMessage(input);
+                    request.response().complete("Сообщение отправлено в игровой чат.");
+                }
             } catch (RuntimeException error) {
-                request.response().complete("Не удалось передать команду: " + safeMessage(error));
+                request.response().complete("Не удалось отправить текст: " + safeMessage(error));
             }
         }
     }
@@ -145,7 +154,7 @@ public final class BrowserBridge implements AutoCloseable {
         response.addProperty("ok", true);
         response.addProperty("token", token);
         response.addProperty("port", PORT);
-        response.addProperty("version", "1.3.1");
+        response.addProperty("version", "1.3.2");
         sendJson(exchange, 200, response);
     }
 
@@ -248,7 +257,7 @@ public final class BrowserBridge implements AutoCloseable {
             boolean accepted = !message.startsWith("Не удалось")
                     && !message.startsWith("Сначала")
                     && !message.startsWith("Пустая")
-                    && !message.startsWith("Команда слишком");
+                    && !message.startsWith("Текст слишком");
             JsonObject response = new JsonObject();
             response.addProperty("ok", accepted);
             response.addProperty("message", message);
