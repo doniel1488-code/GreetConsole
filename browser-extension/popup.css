@@ -11,11 +11,11 @@
   --red: #ff858a;
 }
 * { box-sizing: border-box; }
-html, body { width: 760px; height: 600px; min-width: 620px; min-height: 520px; margin: 0; }
-body { background: var(--bg); color: var(--text); font: 13px "Segoe UI", Arial, sans-serif; }
+html, body { width: 100%; height: 100%; min-width: 760px; min-height: 620px; margin: 0; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font: 14px "Segoe UI", Arial, sans-serif; }
 button, input, select { font: inherit; }
-.app { height: 100%; display: flex; flex-direction: column; padding: 15px 16px 11px; gap: 10px; }
-.topbar { display: flex; align-items: center; justify-content: space-between; min-height: 47px; }
+.app { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 16px 18px 12px; gap: 11px; overflow: hidden; }
+.topbar { display: flex; align-items: center; justify-content: space-between; min-height: 50px; flex: none; }
 .brand { display: flex; align-items: center; gap: 11px; }
 .brand-mark {
   width: 39px; height: 39px; border-radius: 12px; display: grid; place-items: center;
@@ -41,7 +41,7 @@ button, input, select { font: inherit; }
 .autoscroll { display: flex; align-items: center; gap: 5px; margin-left: auto; font-size: 10px; font-weight: 400; letter-spacing: 0; color: #aab7cb; }
 .autoscroll input { accent-color: #8298ec; }
 #line-count { font-size: 10px; letter-spacing: 0; font-weight: 400; }
-.log-view { min-height: 190px; flex: 1; overflow: auto; padding: 10px 11px; border: 1px solid var(--line); border-radius: 10px; background: #080d15; font: 11px/1.55 Consolas, "Cascadia Mono", monospace; scrollbar-width: thin; scrollbar-color: #344663 transparent; }
+.log-view { min-height: 0; flex: 1; overflow: auto; padding: 10px 11px; border: 1px solid var(--line); border-radius: 10px; background: #080d15; font: 11px/1.55 Consolas, "Cascadia Mono", monospace; scrollbar-width: thin; scrollbar-color: #344663 transparent; }
 .log-line { min-height: 17px; white-space: pre-wrap; overflow-wrap: anywhere; color: #cad5e6; }
 .log-line.level-ERROR, .log-line.level-FATAL { color: #ff898e; }
 .log-line.level-WARN { color: #ffc46e; }
@@ -67,10 +67,17 @@ button, input, select { font: inherit; }
 #send-button span { margin-left: 3px; font-size: 13px; }
 .command-footer { display: flex; justify-content: space-between; gap: 10px; margin-top: 7px; color: var(--muted); font-size: 10px; }
 .permission-note { color: #8ed7b4; }
-.footer { display: flex; justify-content: space-between; color: #65748c; font-size: 9px; padding: 0 2px; }
+.footer { display: flex; justify-content: space-between; color: #65748c; font-size: 10px; padding: 0 2px; flex: none; }
 @media (max-width: 680px) {
   html, body { width: 640px; }
   .toolbar { align-items: flex-start; flex-direction: column; }
   .toolbar-right { width: 100%; }
   .search { flex: 1; }
 }
+
+/* Resizable standalone extension window layout */
+.screen { min-height: 0; }
+.console-screen, .game-screen { min-height: 0; }
+.game-screen { min-width: 0; }
+#log-view { min-height: 0; }
+.view-nav, .command-panel { flex: none; }

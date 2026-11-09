@@ -10,3 +10,85 @@
 .sim-management{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:start}.sim-stock-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.sim-stock-item{display:flex;justify-content:space-between;gap:4px;padding:6px;border-radius:6px;background:#f7f0e6;color:#775f4c;font-size:8px}.sim-stock-item b{color:#4c3327;font-size:9px}.sim-subheading{margin:10px 0 5px;color:#9a8068;font-size:8px;font-weight:900;letter-spacing:.8px;text-transform:uppercase}.sim-buy-list,.sim-upgrade-list{display:flex;flex-direction:column;gap:5px}.sim-buy-row{display:flex;align-items:center;justify-content:space-between;gap:7px;width:100%;padding:7px;border:1px solid #eee3d5;border-radius:7px;background:#fffaf3;color:#624a39;text-align:left;cursor:pointer}.sim-buy-row:hover{border-color:#c7a67c;background:#fcf2e5}.sim-buy-row span,.sim-upgrade-info{display:flex;min-width:0;flex-direction:column;gap:2px}.sim-buy-row b,.sim-upgrade-info b{color:#513a2c;font-size:8px}.sim-buy-row small,.sim-upgrade-info small{color:#9a8774;font-size:8px}.sim-buy-row>strong{color:#862e37;font-size:9px;white-space:nowrap}.sim-upgrade{display:flex;justify-content:space-between;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid #f0e7dc}.sim-upgrade:last-child{border:0}.sim-level{color:#b18c61;font-size:8px}.sim-upgrade button{flex:none;padding:6px 7px;border:1px solid #e0cdb6;border-radius:6px;background:#f5e9d8;color:#714d32;font-size:8px;font-weight:900;cursor:pointer}.sim-upgrade button:disabled{background:#e8f0e5;border-color:#d5e3d1;color:#63805d;cursor:default}
 .sim-shift-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border:1px solid #e8dece;border-radius:9px;background:#f7f0e6}.sim-shift-summary>div{display:flex;flex-direction:column;gap:3px}.sim-shift-summary b{color:#513b2e;font-size:9px}.sim-shift-summary span{color:#937f6b;font-size:8px}.sim-shift-hint{color:#9b8875;font-size:8px;text-align:right}.sim-close-shift{padding:7px 10px;border:0;border-radius:6px;background:#8a2934;color:#fff;font-size:9px;font-weight:900;cursor:pointer}.sim-notice{padding:8px 10px;border:1px solid #eadcc6;border-radius:7px;background:#fff9ec;color:#816746;font-size:9px;line-height:1.4}.sim-disclaimer{color:#9b8c7e;font-size:8px;text-align:center}
 @media(max-width:700px){.view-tab{flex-wrap:wrap;gap:4px 6px}.view-tab small{display:none}.sim-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.sim-workspace,.sim-management{grid-template-columns:1fr}.sim-ticket-list{max-height:150px}}@media(max-width:660px){.sim-hero-title span{font-size:11px}.sim-location{display:none}.sim-stock-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Readability improvements for the resizable window */
+.view-tab { min-height: 44px; padding: 9px 13px; gap: 9px; cursor: pointer; position: relative; z-index: 2; pointer-events: auto; }
+.view-tab b { font-size: 13px; }
+.view-tab small { font-size: 10px; }
+.view-tab > span { font-size: 20px; }
+.sim-shell { gap: 12px; font-size: 12px; }
+.sim-hero { min-height: 72px; padding: 13px 16px; gap: 13px; }
+.sim-logo { width: 46px; height: 46px; font-size: 22px; }
+.sim-hero-title span { font-size: 16px; }
+.sim-hero-title small { font-size: 10px; }
+.sim-location b { font-size: 11px; }
+.sim-location span { font-size: 9px; }
+.sim-stats { gap: 9px; }
+.sim-stat { padding: 12px 13px; gap: 6px; }
+.sim-stat small { font-size: 10px; }
+.sim-stat b { font-size: 20px; }
+.sim-stat b i { font-size: 13px; }
+.sim-stat span { font-size: 10px; }
+.sim-shift-progress > div:first-child { font-size: 11px; }
+.sim-shift-progress b { font-size: 12px; }
+.sim-big-track { height: 8px; }
+.sim-workspace, .sim-management { gap: 12px; }
+.sim-panel { padding: 13px; }
+.sim-panel-heading { margin-bottom: 10px; }
+.sim-panel-heading small { font-size: 10px; }
+.sim-panel-heading h3 { font-size: 16px; }
+.sim-panel-heading > span { font-size: 10px; padding: 5px 8px; }
+.sim-invite { padding: 10px 12px; font-size: 12px; }
+.sim-ticket-list { gap: 8px; max-height: 260px; }
+.sim-ticket { padding: 10px; gap: 6px; }
+.sim-ticket-top b, .sim-ticket-top em { font-size: 10px; }
+.sim-ticket > strong { font-size: 13px; }
+.sim-ticket-items { font-size: 10px; }
+.sim-ticket-bottom small { font-size: 10px; }
+.sim-ticket-bottom b { font-size: 12px; }
+.sim-empty { min-height: 160px; }
+.sim-empty b, .sim-no-order b { font-size: 13px; }
+.sim-empty small, .sim-no-order p { font-size: 11px; max-width: 240px; }
+.sim-queue-note { font-size: 10px; line-height: 1.5; }
+.sim-order-heading small { font-size: 10px; }
+.sim-order-heading h3 { font-size: 18px; }
+.sim-status-pill { font-size: 10px; padding: 6px 9px; }
+.sim-customer-phrase { font-size: 11px; }
+.sim-products { gap: 8px; }
+.sim-product { gap: 10px; padding: 10px; }
+.sim-product-icon { width: 42px; height: 42px; font-size: 24px; }
+.sim-product-heading strong { font-size: 13px; }
+.sim-product-heading span { font-size: 11px; }
+.sim-product-step { font-size: 10px; }
+.sim-progress-track { height: 5px; margin-top: 7px; }
+.sim-product-footer { margin-top: 7px; }
+.sim-product-footer small { font-size: 10px; }
+.sim-action { padding: 7px 10px; font-size: 10px; }
+.sim-serve { margin-top: 10px; padding: 11px; font-size: 12px; }
+.sim-stock-grid { gap: 7px; }
+.sim-stock-item { padding: 8px; font-size: 10px; }
+.sim-stock-item b { font-size: 11px; }
+.sim-subheading { margin: 13px 0 7px; font-size: 10px; }
+.sim-buy-list, .sim-upgrade-list { gap: 7px; }
+.sim-buy-row { padding: 9px; }
+.sim-buy-row b, .sim-upgrade-info b { font-size: 10px; }
+.sim-buy-row small, .sim-upgrade-info small { font-size: 10px; }
+.sim-buy-row > strong { font-size: 11px; }
+.sim-upgrade { padding: 9px 0; }
+.sim-level { font-size: 10px; }
+.sim-upgrade button { padding: 8px 10px; font-size: 10px; }
+.sim-shift-summary { padding: 11px 13px; }
+.sim-shift-summary b { font-size: 11px; }
+.sim-shift-summary span { font-size: 10px; }
+.sim-shift-hint { font-size: 10px; }
+.sim-close-shift { padding: 9px 12px; font-size: 11px; }
+.sim-notice { padding: 10px 12px; font-size: 11px; }
+.sim-disclaimer { font-size: 9px; }
+@media (max-width: 900px) {
+  .sim-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sim-workspace, .sim-management { grid-template-columns: 1fr; }
+}
+@media (max-width: 820px) {
+  .view-tab small { display: none; }
+  .view-tab { justify-content: center; }
+  .sim-location { display: none; }
+}

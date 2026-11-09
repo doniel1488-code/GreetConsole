@@ -46,8 +46,26 @@ function upgrade(id){let u=upgrades.find(x=>x.id===id);if(!u)return;let lvl=S.up
 function closeShift(){if(S.shift.closed||S.shift.served<TARGET||S.orders.length)return;let bonus=500+Math.max(0,Math.round(S.shift.profit*.1));S.money+=bonus;S.shift.closed=true;S.notice='Смена закрыта. Премия: '+rub(bonus)+'.';save();render();}
 function nextShift(){if(!S.shift.closed)return;S.day++;S.shift={served:0,sales:0,costs:0,profit:0,closed:false};S.orders=[];S.selected=null;S.notice='День '+S.day+'. Новая смена открыта.';save();render();}
 function pause(){let changed=false;S.orders.forEach(o=>o.items.forEach(i=>{if(i.status==='cooking'){i.status='paused';changed=true;}}));if(changed)save();}
-function tick(){if(document.hidden)return;let now=Date.now(),dt=Math.min(1000,Math.max(0,now-last));last=now;let changed=false;S.orders.forEach(o=>o.items.forEach(i=>{if(i.status!=='cooking')return;i.left=Math.max(0,i.left-dt);if(i.left===0){i.status='ready';S.notice=P[i.pid].n+': этап готов, забирай.';}changed=true;}));if(changed)render();if(now-lastSave>900){save();lastSave=now;}}
-function itemHtml(o,i,n){let p=P[i.pid],step=p.r[Math.min(i.step,p.r.length-1)],label='Этап '+(i.step+1)+' из '+p.r.length,btn='Начать · '+secs(step)+' сек',act='start',cls='',off='',pct=0;if(i.status==='cooking'){label='Готовится · '+Math.ceil(i.left/1000)+' сек';btn='Готовится…';off=' disabled';cls=' is-running';pct=100*(1-i.left/i.total);}else if(i.status==='paused'){label='Пауза · '+Math.ceil(i.left/1000)+' сек';btn='Продолжить';cls=' is-resume';}else if(i.status==='ready'){label='Этап готов';btn='Забрать';act='collect';cls=' is-ready';pct=100;}else if(i.status==='done'){label='Готово ✓';btn='Готово';off=' disabled';cls=' is-done';pct=100;}return '<article class="sim-product '+i.status+'"><div class="sim-product-icon">'+p.e+'</div><div class="sim-product-body"><div class="sim-product-heading"><strong>'+p.n+'</strong><span>'+rub(p.p)+'</span></div><div class="sim-product-step">'+(i.status==='done'?'Можно выдавать гостю':step[1]+' · '+step[0])+'</div><div class="sim-progress-track"><i style="width:'+Math.max(0,pct)+'%"></i></div><div class="sim-product-footer"><small>'+label+'</small><button class="sim-action'+cls+'" data-action="'+act+'" data-order="'+o.id+'" data-item="'+n+'"'+off+'>'+btn+'</button></div></div></article>';}
+function tick(){
+ if(document.hidden)return;
+ const now=Date.now(),dt=Math.min(1000,Math.max(0,now-last));last=now;
+ let becameReady=false,active=false;
+ S.orders.forEach(o=>o.items.forEach((i,index)=>{
+  if(i.status!=='cooking')return;
+  active=true;i.left=Math.max(0,i.left-dt);
+  if(i.left===0){i.status='ready';S.notice=P[i.pid].n+': этап готов, забирай.';becameReady=true;return;}
+  const key=o.id+':'+index;
+  const timer=root.querySelector('[data-timer="'+key+'"]');
+  const bar=root.querySelector('[data-progress="'+key+'"]');
+  if(timer)timer.textContent='Готовится · '+Math.ceil(i.left/1000)+' сек';
+  if(bar)bar.style.width=Math.max(0,Math.min(100,100*(1-i.left/i.total)))+'%';
+ }));
+ // Не пересоздаём DOM каждые 250 мс: кнопки готовки остаются теми же элементами
+ // и не теряют клик, пока обновляется таймер.
+ if(becameReady)render();
+ if(now-lastSave>900){save();lastSave=now;}
+}
+function itemHtml(o,i,n){let p=P[i.pid],step=p.r[Math.min(i.step,p.r.length-1)],label='Этап '+(i.step+1)+' из '+p.r.length,btn='Начать · '+secs(step)+' сек',act='start',cls='',off='',pct=0;if(i.status==='cooking'){label='Готовится · '+Math.ceil(i.left/1000)+' сек';btn='Готовится…';off=' disabled';cls=' is-running';pct=100*(1-i.left/i.total);}else if(i.status==='paused'){label='Пауза · '+Math.ceil(i.left/1000)+' сек';btn='Продолжить';cls=' is-resume';}else if(i.status==='ready'){label='Этап готов';btn='Забрать';act='collect';cls=' is-ready';pct=100;}else if(i.status==='done'){label='Готово ✓';btn='Готово';off=' disabled';cls=' is-done';pct=100;}return '<article class="sim-product '+i.status+'"><div class="sim-product-icon">'+p.e+'</div><div class="sim-product-body"><div class="sim-product-heading"><strong>'+p.n+'</strong><span>'+rub(p.p)+'</span></div><div class="sim-product-step">'+(i.status==='done'?'Можно выдавать гостю':step[1]+' · '+step[0])+'</div><div class="sim-progress-track"><i data-progress="'+o.id+':'+n+'" style="width:'+Math.max(0,pct)+'%"></i></div><div class="sim-product-footer"><small data-timer="'+o.id+':'+n+'">'+label+'</small><button class="sim-action'+cls+'" data-action="'+act+'" data-order="'+o.id+'" data-item="'+n+'"'+off+'>'+btn+'</button></div></div></article>';}
 function ticket(o){let total=o.items.reduce((a,i)=>a+P[i.pid].p,0),done=o.items.filter(i=>i.status==='done').length;return '<button class="sim-ticket'+(o.id===S.selected?' selected':'')+'" data-action="select" data-order="'+o.id+'"><span class="sim-ticket-top"><b>ЗАКАЗ №'+String(o.id).padStart(3,'0')+'</b><em>'+done+'/'+o.items.length+'</em></span><strong>'+esc(o.guest)+'</strong><span class="sim-ticket-items">'+o.items.map(i=>P[i.pid].n).join(' · ')+'</span><span class="sim-ticket-bottom"><small>'+(ready(o)?'Можно выдавать':'В работе')+'</small><b>'+rub(total)+'</b></span></button>';}
 function render(){
 let o=selected(),pct=Math.min(100,S.shift.served/TARGET*100),capacity=cap(),canInvite=!S.shift.closed&&S.shift.served<TARGET&&S.orders.length<capacity;
