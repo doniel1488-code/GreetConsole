@@ -53,11 +53,6 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
-    withSourcesJar()
-}
-
-tasks.named('sourcesJar') {
-    dependsOn tasks.named('restoreConsoleWindowSource')
 }
 
 jar {
