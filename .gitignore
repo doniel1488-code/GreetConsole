@@ -4,3 +4,7 @@ build/
 *.iml
 .check/
 src/main/java/ru/governix/greetconsole/ConsoleWindow.java
+src/main/resources/assets/greetconsole/GreetConsole.exe
+companion/GreetConsole/bin/
+companion/GreetConsole/obj/
+companion/publish/
