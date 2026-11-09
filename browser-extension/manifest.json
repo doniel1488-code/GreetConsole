@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "GreetConsole — Minecraft Console",
+  "short_name": "GreetConsole",
+  "version": "1.0.0",
+  "description": "Окно журнала Minecraft и командная строка от имени игрока.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAssWCiYpw6yklCCIOLIO/Svfgb8UO+N7QCuGrX79DIWSK2cJpyEb3JxIM8XPmmzqdfKgk2icEyheWcCkvvYnsjRZrVkP4/CPeIDtgLJMxoNXiiHNJUf+r0JQTUTzFMTIeRST+1D5wjS0z07+7n8t2Dw/TrgE4GoimpPIHOiz3RuiP4ZTc+pq8fU68bunG+qewuRLB54FIDm98tnG7Ki839smlYWB4vhZqUBBuEQjnc4nU7Wbi+WCauB0IIk04QSQFWJea2piGcwAV13UPsaGRoKdwqD5PnDV0NQiAG613/4osd2aSW6gqpsLzmq9wVbacJhR5xdTCdfVTZqRDvL2eAwIDAQAB",
+  "icons": {
+    "128": "icons/icon.png"
+  },
+  "action": {
+    "default_title": "Открыть GreetConsole",
+    "default_popup": "popup.html"
+  },
+  "host_permissions": [
+    "http://127.0.0.1:38761/*"
+  ]
+}

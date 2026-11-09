@@ -3,7 +3,7 @@
   "id": "greetconsole",
   "version": "${version}",
   "name": "GreetConsole",
-  "description": "Fabric client mod with a standalone C# log window and a player command input.",
+  "description": "Fabric client mod with a standalone C# log window and a Yandex Browser extension for live logs and player commands.",
   "authors": [
     "Governix"
   ],

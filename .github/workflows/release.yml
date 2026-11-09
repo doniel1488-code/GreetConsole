@@ -43,6 +43,11 @@ jobs:
       - name: Build and remap Fabric mod
         run: gradle --no-daemon clean build
 
+      - name: Package Yandex Browser extension
+        shell: pwsh
+        run: |
+          Compress-Archive -Path browser-extension/* -DestinationPath build/GreetConsole-Yandex-Extension-1.0.0.zip -Force
+
       - name: Read version
         id: version
         shell: pwsh
@@ -61,11 +66,15 @@ jobs:
 
             Fabric-мод для Minecraft 1.21.8. Окно журнала полностью вынесено в отдельное приложение Windows на C# / WinForms — оно не зависит от AWT и графического окружения Java.
 
-            - **F8** — запустить или закрыть отдельное окно.
-            - Окно самостоятельно читает `logs/latest.log` в реальном времени.
+            - **F8** — запустить или закрыть отдельное окно Windows.
+            - Расширение для Яндекс Браузера показывает `logs/latest.log` в реальном времени и имеет собственную командную строку.
+            - Для браузерной панели требуется запущенный Minecraft с GreetConsole 1.3.0; локальный мост слушает только `127.0.0.1:38761`.
+            - Окно C# самостоятельно читает `logs/latest.log` в реальном времени.
             - Самостоятельная установка .NET не требуется: приложение C# встроено в JAR и публикуется как self-contained Windows x64.
             - Обновлённый интерфейс с отдельной командной строкой для отправки команд от имени игрока через активный Minecraft-клиент. Серверные права не обходятся.
             - Поиск, фильтры TRACE / DEBUG / INFO / WARN / ERROR / FATAL, пауза, очистка, копирование и автопрокрутка.
+            - Командная строка отправляет команды через активный клиент Minecraft; серверные права не обходятся.
+            - [Инструкция по установке расширения в Яндекс Браузер](https://browser.yandex.ru/help/ru/personalization/extension).
             - Unicode, кириллица, Minecraft-коды `&` / `§`, HEX `&#RRGGBB`, расширенный HEX и ANSI RGB / 256 цветов.
 
             Установка: замени старый JAR в папке `mods` этим файлом. Требуются Minecraft Java Edition 1.21.8, Java 21, Fabric Loader и Fabric API.
@@ -76,7 +85,9 @@ jobs:
             - [Инструкция по установке модов Fabric](https://docs.fabricmc.net/players/installing-mods)
 
             Исходный код: https://github.com/doniel1488-code/GreetConsole
-          files: build/libs/greetconsole-*.jar
+          files: |
+            build/libs/greetconsole-*.jar
+            build/GreetConsole-Yandex-Extension-1.0.0.zip
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

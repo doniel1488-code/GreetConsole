@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GreetConsole</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">GC</div>
+        <div>
+          <div class="brand-name">GREETCONSOLE</div>
+          <div class="brand-caption">MINECRAFT CLIENT PANEL</div>
+        </div>
+      </div>
+      <div class="connection">
+        <span id="status-dot" class="dot"></span>
+        <div>
+          <strong id="status-title">Поиск Minecraft</strong>
+          <small id="status-subtitle">127.0.0.1:38761</small>
+        </div>
+      </div>
+    </header>
+
+    <section class="toolbar">
+      <div class="toolbar-left">
+        <button id="pause-button" class="tool-button" type="button">Пауза</button>
+        <button id="clear-button" class="tool-button" type="button">Очистить</button>
+        <button id="copy-button" class="tool-button" type="button">Копировать</button>
+      </div>
+      <div class="toolbar-right">
+        <input id="search" class="search" type="search" placeholder="Поиск в журнале">
+        <select id="level-filter" class="filter" aria-label="Фильтр уровня">
+          <option value="ALL">Все</option>
+          <option>TRACE</option><option>DEBUG</option><option>INFO</option>
+          <option>WARN</option><option>ERROR</option><option>FATAL</option><option>OTHER</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="log-meta">
+      <span>ЖУРНАЛ В РЕАЛЬНОМ ВРЕМЕНИ</span>
+      <label class="autoscroll"><input id="autoscroll" type="checkbox" checked> Автопрокрутка</label>
+      <span id="line-count">0 строк</span>
+    </div>
+    <main id="log-view" class="log-view" aria-live="polite">
+      <div class="welcome">
+        <div class="welcome-icon">⌁</div>
+        <strong>Ожидание подключения</strong>
+        <p>Запусти Minecraft с модом GreetConsole 1.3.0. Журнал появится здесь автоматически.</p>
+      </div>
+    </main>
+
+    <section class="command-panel">
+      <div class="command-heading">
+        <strong>КОМАНДНАЯ СТРОКА</strong>
+        <span>ВВОД ОТ ИМЕНИ ИГРОКА</span>
+      </div>
+      <form id="command-form" autocomplete="off">
+        <span class="prompt">&gt;</span>
+        <input id="command-input" type="text" maxlength="256" placeholder="Например: /spawn" spellcheck="false" disabled>
+        <button id="send-button" type="submit" disabled>Отправить <span>↵</span></button>
+      </form>
+      <div class="command-footer">
+        <span id="command-feedback">Команда будет отправлена через активный клиент Minecraft.</span>
+        <span class="permission-note">Права сервера сохраняются</span>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span id="player-info">Игрок не подключён</span>
+      <span>GreetConsole 1.3.0</span>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

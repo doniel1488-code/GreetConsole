@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Minecraft 1.21.8 mod and Windows companion
+    name: Build Minecraft mod, Windows companion and browser extension
     runs-on: windows-latest
     steps:
       - name: Checkout source
@@ -43,10 +43,17 @@ jobs:
       - name: Build and remap Fabric mod
         run: gradle --no-daemon clean build
 
-      - name: Upload remapped JAR
+      - name: Package Yandex Browser extension
+        shell: pwsh
+        run: |
+          Compress-Archive -Path browser-extension/* -DestinationPath build/GreetConsole-Yandex-Extension-1.0.0.zip -Force
+
+      - name: Upload build outputs
         uses: actions/upload-artifact@v7
         with:
-          name: GreetConsole-Minecraft-1.21.8-Windows
-          path: build/libs/greetconsole-*.jar
+          name: GreetConsole-1.3.0
+          path: |
+            build/libs/greetconsole-*.jar
+            build/GreetConsole-Yandex-Extension-1.0.0.zip
           if-no-files-found: error
           retention-days: 30

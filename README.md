@@ -1,8 +1,8 @@
-# GreetConsole 1.2.0 — Minecraft 1.21.8 (Fabric)
+# GreetConsole 1.3.0 — Minecraft 1.21.8 (Fabric)
 
 ![Иконка GreetConsole](src/main/resources/assets/greetconsole/icon.png)
 
-GreetConsole — клиентский Fabric-мод с отдельным окном журнала Minecraft. Само окно написано на **C# / Windows Forms** и работает отдельным Windows-процессом. Оно не использует AWT/Swing и не зависит от графического окружения Java.
+GreetConsole — клиентский Fabric-мод с отдельным окном журнала Minecraft на **C# / Windows Forms** и расширением для **Яндекс Браузера**. Браузерная панель показывает журнал Minecraft и содержит командную строку.
 
 ## Как открыть консоль
 
@@ -12,6 +12,15 @@ GreetConsole — клиентский Fabric-мод с отдельным окн
 4. Повторное нажатие **F8** закроет окно. Кнопка **X** также закрывает приложение; следующее нажатие F8 запустит его снова.
 
 Клавишу можно изменить в **Настройки → Управление → Назначение клавиш → GreetConsole → Открыть GreetConsole**.
+
+## Расширение для Яндекс Браузера
+
+1. Установи GreetConsole 1.3.0 и запусти Minecraft с Fabric.
+2. Скачай архив расширения из [GitHub Releases](https://github.com/doniel1488-code/GreetConsole/releases) и распакуй его.
+3. Открой `browser://extensions`, включи режим разработчика и выбери **Загрузить распакованное расширение**. Укажи распакованную папку расширения.
+4. Открой значок GreetConsole в панели браузера. Игра должна быть запущена.
+
+Расширение подключается к локальному адресу `127.0.0.1:38761`. Мод слушает только loopback-интерфейс и принимает API-запросы только от origin расширения. Для деталей см. [README расширения](browser-extension/README.md).
 
 ## Что умеет консоль
 
@@ -56,7 +65,7 @@ GreetConsole — клиентский Fabric-мод с отдельным окн
 
 ## Сборка из исходников (Windows)
 
-Нужны Java 21, .NET 8 SDK и интернет-доступ. Запусти `build.bat`: скрипт соберёт self-contained приложение C# и затем Fabric JAR. Итоговый файл появится в `build/libs/greetconsole-1.1.0.jar`.
+Нужны Java 21, .NET 8 SDK и интернет-доступ. Запусти `build.bat`: скрипт соберёт self-contained приложение C# и затем Fabric JAR. Итоговый файл появится в `build/libs/greetconsole-1.3.0.jar`.
 
 GitHub Actions собирает мод на Windows и публикует JAR с уже встроенным C#-приложением. Архитектура описана в [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Релизы находятся во вкладке [GitHub Releases](https://github.com/doniel1488-code/GreetConsole/releases).
 

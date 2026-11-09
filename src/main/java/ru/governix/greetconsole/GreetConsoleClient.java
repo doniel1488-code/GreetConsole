@@ -24,35 +24,55 @@ public final class GreetConsoleClient implements ClientModInitializer {
     private Path latestLog;
     private Process companionProcess;
     private CommandBridge commandBridge;
+    private BrowserBridge browserBridge;
     private KeyBinding openConsoleKey;
 
     @Override
     public void onInitializeClient() {
-        if (!System.getProperty("os.name", "").toLowerCase().contains("windows")) {
-            LOGGER.error("GreetConsole desktop companion currently supports Windows only.");
-            return;
+        boolean windows = System.getProperty("os.name", "").toLowerCase().contains("windows");
+        latestLog = FabricLoader.getInstance().getGameDir().resolve("logs").resolve("latest.log");
+
+        if (windows) {
+            openConsoleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                    "key.greetconsole.open",
+                    InputUtil.Type.KEYSYM,
+                    GLFW.GLFW_KEY_F8,
+                    "category.greetconsole"
+            ));
+        } else {
+            LOGGER.warn("The separate C# desktop window is Windows-only. The browser extension can still be used.");
         }
 
-        latestLog = FabricLoader.getInstance().getGameDir().resolve("logs").resolve("latest.log");
-        openConsoleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.greetconsole.open",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_F8,
-                "category.greetconsole"
-        ));
+        try {
+            browserBridge = new BrowserBridge(latestLog);
+            browserBridge.start();
+            LOGGER.info("GreetConsole browser bridge is listening on http://127.0.0.1:{}/.", BrowserBridge.PORT);
+        } catch (Exception error) {
+            browserBridge = null;
+            LOGGER.error("Could not start the GreetConsole browser bridge. Is port {} already in use?", BrowserBridge.PORT, error);
+        }
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (browserBridge != null) {
+                browserBridge.updateStatus(client);
+                browserBridge.drain(client);
+            }
             if (commandBridge != null) {
                 commandBridge.drain(client);
             }
-            while (openConsoleKey.wasPressed()) {
-                toggleCompanion("F8");
+            if (openConsoleKey != null) {
+                while (openConsoleKey.wasPressed()) {
+                    toggleCompanion("F8");
+                }
             }
         });
 
-        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> stopCompanion());
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            stopCompanion();
+            stopBrowserBridge();
+        });
 
-        LOGGER.info("GreetConsole initialized. Press F8 to open the separate C# log window.");
+        LOGGER.info("GreetConsole initialized. Press F8 to open the separate C# log window (Windows).");
         LOGGER.info("Minecraft log file: {}", latestLog.toAbsolutePath());
     }
 
@@ -133,5 +153,12 @@ public final class GreetConsoleClient implements ClientModInitializer {
         if (companionProcess != null && companionProcess.isAlive()) companionProcess.destroy();
         companionProcess = null;
         stopCommandBridge();
+    }
+
+    private synchronized void stopBrowserBridge() {
+        if (browserBridge != null) {
+            browserBridge.close();
+            browserBridge = null;
+        }
     }
 }
