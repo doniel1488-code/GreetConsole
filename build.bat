@@ -12,6 +12,14 @@ if errorlevel 1 (
   exit /b 1
 )
 
+where dotnet >nul 2>nul
+if errorlevel 1 (
+  echo .NET 8 SDK was not found. Install it first:
+  echo https://dotnet.microsoft.com/download/dotnet/8.0
+  pause
+  exit /b 1
+)
+
 if not exist "%GRADLE_HOME%\bin\gradle.bat" (
   echo Downloading Gradle %GRADLE_VERSION%...
   if not exist "%INSTALL_ROOT%" mkdir "%INSTALL_ROOT%"
@@ -23,13 +31,33 @@ if not exist "%GRADLE_HOME%\bin\gradle.bat" (
   )
 )
 
+echo Publishing the self-contained C# desktop companion...
+dotnet publish companion\GreetConsole\GreetConsole.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --output companion\publish
+if errorlevel 1 (
+  echo C# companion build failed.
+  pause
+  exit /b 1
+)
+if not exist "companion\publish\GreetConsole.exe" (
+  echo C# companion executable was not produced.
+  pause
+  exit /b 1
+)
+if not exist "src\main\resources\assets\greetconsole" mkdir "src\main\resources\assets\greetconsole"
+copy /Y "companion\publish\GreetConsole.exe" "src\main\resources\assets\greetconsole\GreetConsole.exe" >nul
+if errorlevel 1 (
+  echo Could not copy the C# companion into the mod resources.
+  pause
+  exit /b 1
+)
+
 call "%GRADLE_HOME%\bin\gradle.bat" --no-daemon clean build
 if errorlevel 1 (
-  echo Build failed.
+  echo Fabric mod build failed.
   pause
   exit /b 1
 )
 
 echo.
-echo Build complete: build\libs\greetconsole-*.jar
+echo Build complete: build\libs\greetconsole-1.1.0.jar
 pause
