@@ -23,6 +23,7 @@ public final class GreetConsoleClient implements ClientModInitializer {
 
     private Path latestLog;
     private Process companionProcess;
+    private CommandBridge commandBridge;
     private KeyBinding openConsoleKey;
 
     @Override
@@ -41,6 +42,9 @@ public final class GreetConsoleClient implements ClientModInitializer {
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (commandBridge != null) {
+                commandBridge.drain(client);
+            }
             while (openConsoleKey.wasPressed()) {
                 toggleCompanion("F8");
             }
@@ -52,31 +56,52 @@ public final class GreetConsoleClient implements ClientModInitializer {
         LOGGER.info("Minecraft log file: {}", latestLog.toAbsolutePath());
     }
 
-    private void toggleCompanion(String trigger) {
+    private synchronized void toggleCompanion(String trigger) {
         LOGGER.info("Console open/toggle requested by {}.", trigger);
         try {
             if (companionProcess != null && companionProcess.isAlive()) {
-                companionProcess.destroy();
+                Process current = companionProcess;
+                companionProcess = null;
+                current.destroy();
+                stopCommandBridge();
                 LOGGER.info("Sent close request to GreetConsole desktop window.");
                 return;
             }
 
+            stopCommandBridge();
             Path companionDirectory = FabricLoader.getInstance().getConfigDir().resolve("greetconsole");
             Files.createDirectories(companionDirectory);
             Path executable = companionDirectory.resolve("GreetConsole.exe");
             extractCompanion(executable);
 
+            CommandBridge bridge = new CommandBridge();
+            CommandBridge.Connection connection = bridge.start();
+            commandBridge = bridge;
+
             ProcessBuilder builder = new ProcessBuilder(
                     executable.toAbsolutePath().toString(),
-                    "--log",
-                    latestLog.toAbsolutePath().toString()
+                    "--log", latestLog.toAbsolutePath().toString(),
+                    "--command-port", Integer.toString(connection.port()),
+                    "--command-token", connection.token()
             );
             builder.directory(companionDirectory.toFile());
             builder.redirectErrorStream(true);
             builder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
-            companionProcess = builder.start();
-            LOGGER.info("Started C# desktop companion (PID {}).", companionProcess.pid());
+
+            Process started = builder.start();
+            companionProcess = started;
+            started.onExit().thenRun(() -> {
+                synchronized (GreetConsoleClient.this) {
+                    if (companionProcess == started) companionProcess = null;
+                    if (commandBridge == bridge) {
+                        bridge.close();
+                        commandBridge = null;
+                    }
+                }
+            });
+            LOGGER.info("Started C# desktop companion (PID {}). Command bridge listening on 127.0.0.1:{}.", started.pid(), connection.port());
         } catch (Exception error) {
+            stopCommandBridge();
             LOGGER.error("Could not start or stop the GreetConsole C# desktop companion.", error);
         }
     }
@@ -97,8 +122,16 @@ public final class GreetConsoleClient implements ClientModInitializer {
         }
     }
 
-    private void stopCompanion() {
-        if (companionProcess == null || !companionProcess.isAlive()) return;
-        companionProcess.destroy();
+    private synchronized void stopCommandBridge() {
+        if (commandBridge != null) {
+            commandBridge.close();
+            commandBridge = null;
+        }
+    }
+
+    private synchronized void stopCompanion() {
+        if (companionProcess != null && companionProcess.isAlive()) companionProcess.destroy();
+        companionProcess = null;
+        stopCommandBridge();
     }
 }

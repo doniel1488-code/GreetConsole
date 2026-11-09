@@ -1,4 +1,6 @@
 using System.Drawing;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -36,13 +38,24 @@ internal sealed class MainForm : Form
     private readonly Label _statusLabel = new();
     private readonly CheckBox _autoScroll = new() { Text = "Автопрокрутка", Checked = true, AutoSize = true };
     private readonly Button _pauseButton = new() { Text = "Пауза", AutoSize = true };
+    private readonly TextBox _commandInput = new();
+    private readonly Button _sendCommandButton = new() { Text = "Отправить", AutoSize = true, Enabled = false };
+    private readonly Label _commandStatusLabel = new();
+    private readonly Label _connectionIndicator = new();
+    private readonly int _commandPort;
+    private readonly string _commandToken;
+    private readonly object _commandWriteLock = new();
+    private TcpClient? _commandClient;
+    private StreamWriter? _commandWriter;
     private long _position;
     private bool _paused;
     private string _monoFont = "Consolas";
 
-    public MainForm(string logPath)
+    public MainForm(string logPath, int commandPort, string commandToken)
     {
         _logPath = Path.GetFullPath(logPath);
+        _commandPort = commandPort;
+        _commandToken = commandToken;
         Text = "GreetConsole — Журнал Minecraft";
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(760, 460);
@@ -54,7 +67,12 @@ internal sealed class MainForm : Form
         LoadInitialTail();
         _pollTimer.Tick += (_, _) => PollLog();
         _pollTimer.Start();
-        FormClosed += (_, _) => _pollTimer.Stop();
+        FormClosed += (_, _) =>
+        {
+            _pollTimer.Stop();
+            _commandClient?.Close();
+        };
+        Shown += async (_, _) => await ConnectCommandBridgeAsync();
     }
 
     private void BuildInterface()
@@ -63,48 +81,84 @@ internal sealed class MainForm : Form
         {
             Dock = DockStyle.Fill,
             BackColor = WindowBackground,
-            Padding = new Padding(12),
+            Padding = new Padding(16),
             ColumnCount = 1,
-            RowCount = 3
+            RowCount = 5,
+            Margin = Padding.Empty
         };
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         Controls.Add(root);
+
+        var header = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            ColumnCount = 2,
+            RowCount = 1,
+            BackColor = WindowBackground,
+            Margin = new Padding(0, 0, 0, 14)
+        };
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+
+        var heading = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            BackColor = WindowBackground,
+            Margin = Padding.Empty
+        };
+        heading.Controls.Add(new Label
+        {
+            Text = "GREETCONSOLE",
+            ForeColor = Accent,
+            Font = new Font("Segoe UI Semibold", 16F),
+            AutoSize = true,
+            Margin = Padding.Empty
+        });
+        heading.Controls.Add(new Label
+        {
+            Text = "ЖУРНАЛ MINECRAFT  /  УПРАВЛЕНИЕ ИГРОКОМ",
+            ForeColor = MutedText,
+            Font = new Font("Segoe UI", 8.5F),
+            AutoSize = true,
+            Margin = new Padding(1, 1, 0, 0)
+        });
+        header.Controls.Add(heading, 0, 0);
+
+        _connectionIndicator.Text = "●  ОЖИДАНИЕ ИГРЫ";
+        _connectionIndicator.AutoSize = true;
+        _connectionIndicator.ForeColor = MutedText;
+        _connectionIndicator.Font = new Font("Segoe UI Semibold", 8.5F);
+        _connectionIndicator.Margin = new Padding(12, 12, 2, 0);
+        header.Controls.Add(_connectionIndicator, 1, 0);
+        root.Controls.Add(header, 0, 0);
 
         var toolbar = new TableLayoutPanel
         {
             Dock = DockStyle.Top,
             AutoSize = true,
             BackColor = PanelBackground,
-            Padding = new Padding(10),
-            ColumnCount = 1,
-            RowCount = 2,
+            Padding = new Padding(10, 8, 10, 8),
+            ColumnCount = 2,
+            RowCount = 1,
             Margin = new Padding(0, 0, 0, 10)
         };
-        toolbar.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        toolbar.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        root.Controls.Add(toolbar, 0, 0);
+        toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-        var firstRow = new FlowLayoutPanel
+        var actions = new FlowLayoutPanel
         {
-            Dock = DockStyle.Top,
             AutoSize = true,
-            WrapContents = true,
+            WrapContents = false,
             BackColor = PanelBackground,
-            FlowDirection = FlowDirection.LeftToRight,
             Margin = Padding.Empty
         };
-        var title = new Label
-        {
-            Text = "GREETCONSOLE  /  LIVE LOG",
-            ForeColor = Accent,
-            Font = new Font("Segoe UI Semibold", 10F),
-            AutoSize = true,
-            Margin = new Padding(0, 7, 18, 0)
-        };
-        firstRow.Controls.Add(title);
-
         StyleButton(_pauseButton);
         _pauseButton.Click += (_, _) =>
         {
@@ -113,11 +167,11 @@ internal sealed class MainForm : Form
             if (!_paused) RebuildLog();
             UpdateStatus();
         };
-        firstRow.Controls.Add(_pauseButton);
+        actions.Controls.Add(_pauseButton);
 
         var clearButton = MakeButton("Очистить");
         clearButton.Click += (_, _) => { _history.Clear(); _pendingBytes.Clear(); _logView.Clear(); UpdateStatus(); };
-        firstRow.Controls.Add(clearButton);
+        actions.Controls.Add(clearButton);
 
         var copyButton = MakeButton("Копировать");
         copyButton.Click += (_, _) =>
@@ -125,39 +179,51 @@ internal sealed class MainForm : Form
             if (_logView.TextLength > 0)
                 Clipboard.SetText(_logView.SelectedText.Length > 0 ? _logView.SelectedText : _logView.Text);
         };
-        firstRow.Controls.Add(copyButton);
+        actions.Controls.Add(copyButton);
+        toolbar.Controls.Add(actions, 0, 0);
 
-        var searchLabel = new Label { Text = "Поиск:", AutoSize = true, ForeColor = MutedText, Margin = new Padding(12, 8, 4, 0) };
-        firstRow.Controls.Add(searchLabel);
-        _searchBox.Width = 220;
-        _searchBox.BackColor = WindowBackground;
-        _searchBox.ForeColor = DefaultText;
-        _searchBox.BorderStyle = BorderStyle.FixedSingle;
-        _searchBox.Margin = new Padding(0, 3, 8, 0);
-        _searchBox.TextChanged += (_, _) => HighlightSearch();
-        firstRow.Controls.Add(_searchBox);
-        toolbar.Controls.Add(firstRow, 0, 0);
-
-        var secondRow = new FlowLayoutPanel
+        var filters = new FlowLayoutPanel
         {
-            Dock = DockStyle.Top,
             AutoSize = true,
             WrapContents = true,
+            FlowDirection = FlowDirection.RightToLeft,
             BackColor = PanelBackground,
-            Margin = new Padding(0, 8, 0, 0)
+            Margin = new Padding(12, 0, 0, 0),
+            Anchor = AnchorStyles.Right
         };
-        secondRow.Controls.Add(new Label { Text = "Уровень:", AutoSize = true, ForeColor = MutedText, Margin = new Padding(0, 6, 4, 0) });
         _levelFilter.DropDownStyle = ComboBoxStyle.DropDownList;
         _levelFilter.Width = 125;
         _levelFilter.Items.AddRange(["Все уровни", "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "OTHER"]);
         _levelFilter.SelectedIndex = 0;
         _levelFilter.SelectedIndexChanged += (_, _) => RebuildLog();
-        secondRow.Controls.Add(_levelFilter);
+        filters.Controls.Add(_levelFilter);
+
+        _searchBox.Width = 220;
+        _searchBox.BackColor = WindowBackground;
+        _searchBox.ForeColor = DefaultText;
+        _searchBox.BorderStyle = BorderStyle.FixedSingle;
+        _searchBox.Margin = new Padding(0, 3, 8, 0);
+        _searchBox.PlaceholderText = "Поиск по журналу";
+        _searchBox.TextChanged += (_, _) => HighlightSearch();
+        filters.Controls.Add(_searchBox);
+
+        var searchLabel = new Label
+        {
+            Text = "ПОИСК",
+            AutoSize = true,
+            ForeColor = MutedText,
+            Font = new Font("Segoe UI Semibold", 8F),
+            Margin = new Padding(0, 8, 8, 0)
+        };
+        filters.Controls.Add(searchLabel);
+
+        _autoScroll.Text = "Автопрокрутка";
         _autoScroll.ForeColor = DefaultText;
         _autoScroll.BackColor = PanelBackground;
-        _autoScroll.Margin = new Padding(14, 5, 0, 0);
-        secondRow.Controls.Add(_autoScroll);
-        toolbar.Controls.Add(secondRow, 0, 1);
+        _autoScroll.Margin = new Padding(10, 5, 4, 0);
+        filters.Controls.Add(_autoScroll);
+        toolbar.Controls.Add(filters, 1, 0);
+        root.Controls.Add(toolbar, 0, 1);
 
         _logView.Dock = DockStyle.Fill;
         _logView.ReadOnly = true;
@@ -167,16 +233,264 @@ internal sealed class MainForm : Form
         _logView.WordWrap = false;
         _logView.HideSelection = false;
         _logView.DetectUrls = false;
-        _logView.Font = new Font(_monoFont, 9F);
+        _logView.Font = new Font(_monoFont, 9.5F);
         _logView.Margin = new Padding(0);
-        root.Controls.Add(_logView, 0, 1);
+        root.Controls.Add(_logView, 0, 2);
 
-        _statusLabel.Dock = DockStyle.Bottom;
+        var commandPanel = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            BackColor = PanelBackground,
+            Padding = new Padding(12, 10, 12, 8),
+            ColumnCount = 1,
+            RowCount = 3,
+            Margin = new Padding(0, 12, 0, 8)
+        };
+        commandPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        commandPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        commandPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+        var commandHeading = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            ColumnCount = 2,
+            RowCount = 1,
+            Margin = new Padding(0, 0, 0, 8)
+        };
+        commandHeading.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        commandHeading.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        commandHeading.Controls.Add(new Label
+        {
+            Text = "КОМАНДНАЯ СТРОКА",
+            ForeColor = Accent,
+            Font = new Font("Segoe UI Semibold", 9F),
+            AutoSize = true,
+            Margin = Padding.Empty
+        }, 0, 0);
+        commandHeading.Controls.Add(new Label
+        {
+            Text = "ВВОД ОТ ИМЕНИ ИГРОКА",
+            ForeColor = MutedText,
+            Font = new Font("Segoe UI", 8F),
+            AutoSize = true,
+            Margin = new Padding(8, 1, 0, 0)
+        }, 1, 0);
+        commandPanel.Controls.Add(commandHeading, 0, 0);
+
+        var inputRow = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            Height = 40,
+            ColumnCount = 3,
+            RowCount = 1,
+            Margin = new Padding(0, 0, 0, 7)
+        };
+        inputRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 34));
+        inputRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        inputRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 126));
+
+        inputRow.Controls.Add(new Label
+        {
+            Text = "›",
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleCenter,
+            ForeColor = Accent,
+            BackColor = WindowBackground,
+            Font = new Font("Consolas", 17F, FontStyle.Bold),
+            Margin = Padding.Empty
+        }, 0, 0);
+
+        _commandInput.Dock = DockStyle.Fill;
+        _commandInput.BackColor = WindowBackground;
+        _commandInput.ForeColor = DefaultText;
+        _commandInput.BorderStyle = BorderStyle.FixedSingle;
+        _commandInput.Font = new Font("Consolas", 11F);
+        _commandInput.PlaceholderText = "Например: /spawn или /home";
+        _commandInput.MaxLength = 256;
+        _commandInput.Margin = new Padding(0, 0, 8, 0);
+        _commandInput.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                SendCommand();
+            }
+        };
+        inputRow.Controls.Add(_commandInput, 1, 0);
+
+        _sendCommandButton.Dock = DockStyle.Fill;
+        _sendCommandButton.FlatStyle = FlatStyle.Flat;
+        _sendCommandButton.FlatAppearance.BorderSize = 0;
+        _sendCommandButton.BackColor = Color.FromArgb(91, 111, 207);
+        _sendCommandButton.ForeColor = Color.White;
+        _sendCommandButton.Font = new Font("Segoe UI Semibold", 9F);
+        _sendCommandButton.Margin = Padding.Empty;
+        _sendCommandButton.Click += (_, _) => SendCommand();
+        inputRow.Controls.Add(_sendCommandButton, 2, 0);
+        commandPanel.Controls.Add(inputRow, 0, 1);
+
+        var commandFooter = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            ColumnCount = 2,
+            RowCount = 1,
+            Margin = Padding.Empty
+        };
+        commandFooter.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        commandFooter.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        commandFooter.Controls.Add(new Label
+        {
+            Text = "Enter — отправить  •  Команды выполняются с правами вашего аккаунта на сервере",
+            ForeColor = MutedText,
+            AutoSize = true,
+            Font = new Font("Segoe UI", 8F),
+            Margin = Padding.Empty
+        }, 0, 0);
+        _commandStatusLabel.Text = "Подключение к Minecraft…";
+        _commandStatusLabel.ForeColor = MutedText;
+        _commandStatusLabel.AutoSize = true;
+        _commandStatusLabel.Font = new Font("Segoe UI", 8F);
+        _commandStatusLabel.Margin = new Padding(10, 0, 0, 0);
+        commandFooter.Controls.Add(_commandStatusLabel, 1, 0);
+        commandPanel.Controls.Add(commandFooter, 0, 2);
+        root.Controls.Add(commandPanel, 0, 3);
+
+        _statusLabel.Dock = DockStyle.Fill;
         _statusLabel.AutoSize = true;
         _statusLabel.ForeColor = MutedText;
-        _statusLabel.Padding = new Padding(0, 8, 0, 0);
-        root.Controls.Add(_statusLabel, 0, 2);
+        _statusLabel.Padding = new Padding(0, 2, 0, 0);
+        _statusLabel.Font = new Font("Segoe UI", 8F);
+        root.Controls.Add(_statusLabel, 0, 4);
         UpdateStatus();
+    }
+
+    private async Task ConnectCommandBridgeAsync()
+    {
+        if (_commandPort <= 0 || string.IsNullOrWhiteSpace(_commandToken))
+        {
+            SetCommandStatus("Окно запущено отдельно от Minecraft.", false);
+            return;
+        }
+
+        var client = new TcpClient();
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await client.ConnectAsync(IPAddress.Loopback, _commandPort, timeout.Token);
+            var stream = client.GetStream();
+            var reader = new StreamReader(stream, Encoding.UTF8, false, 1024, true);
+            var writer = new StreamWriter(stream, new UTF8Encoding(false), 1024, true) { AutoFlush = true };
+
+            await writer.WriteLineAsync($"HELLO {_commandToken}");
+            string? handshake = await reader.ReadLineAsync().WaitAsync(timeout.Token);
+            if (!string.Equals(handshake, "READY", StringComparison.Ordinal))
+                throw new IOException(handshake ?? "Minecraft закрыл соединение.");
+
+            _commandClient = client;
+            _commandWriter = writer;
+            _sendCommandButton.Enabled = true;
+            _connectionIndicator.Text = "●  ИГРА ПОДКЛЮЧЕНА";
+            _connectionIndicator.ForeColor = Color.FromArgb(92, 222, 160);
+            SetCommandStatus("Подключено к активному клиенту Minecraft.", true);
+            _ = Task.Run(() => ReadCommandResponses(reader, client));
+        }
+        catch (Exception error)
+        {
+            client.Dispose();
+            _sendCommandButton.Enabled = false;
+            _connectionIndicator.Text = "●  НЕТ СВЯЗИ С ИГРОЙ";
+            _connectionIndicator.ForeColor = Color.FromArgb(255, 145, 145);
+            SetCommandStatus($"Не удалось подключиться: {error.Message}", false);
+        }
+    }
+
+    private void ReadCommandResponses(StreamReader reader, TcpClient client)
+    {
+        try
+        {
+            string? line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                string response = line;
+                RunOnUiThread(() =>
+                {
+                    bool success = response.StartsWith("OK\t", StringComparison.Ordinal);
+                    string message = response.Length > 3 ? response[3..] : response;
+                    SetCommandStatus(message, success);
+                });
+            }
+        }
+        catch (IOException)
+        {
+            // The game or companion window was closed.
+        }
+        finally
+        {
+            client.Dispose();
+            RunOnUiThread(() =>
+            {
+                _commandWriter = null;
+                _sendCommandButton.Enabled = false;
+                _connectionIndicator.Text = "●  НЕТ СВЯЗИ С ИГРОЙ";
+                _connectionIndicator.ForeColor = Color.FromArgb(255, 145, 145);
+                SetCommandStatus("Соединение с Minecraft закрыто. Откройте окно снова клавишей F8.", false);
+            });
+        }
+    }
+
+    private void RunOnUiThread(Action action)
+    {
+        if (IsDisposed || !IsHandleCreated) return;
+        try { BeginInvoke(action); }
+        catch (InvalidOperationException) { }
+    }
+
+    private void SetCommandStatus(string message, bool success)
+    {
+        _commandStatusLabel.Text = message;
+        _commandStatusLabel.ForeColor = success
+            ? Color.FromArgb(92, 222, 160)
+            : Color.FromArgb(255, 145, 145);
+    }
+
+    private void SendCommand()
+    {
+        string command = _commandInput.Text.Trim();
+        if (command.Length == 0)
+        {
+            SetCommandStatus("Введите команду, например /spawn.", false);
+            _commandInput.Focus();
+            return;
+        }
+
+        if (command.Length > 256)
+        {
+            SetCommandStatus("Команда слишком длинная (максимум 256 символов).", false);
+            return;
+        }
+
+        lock (_commandWriteLock)
+        {
+            if (_commandWriter == null)
+            {
+                SetCommandStatus("Нет подключения к игре. Закройте и снова откройте окно через F8.", false);
+                return;
+            }
+
+            try
+            {
+                _commandWriter.WriteLine(command);
+                _commandInput.Clear();
+                SetCommandStatus($"Отправлено: {command}", true);
+            }
+            catch (IOException error)
+            {
+                SetCommandStatus($"Ошибка отправки: {error.Message}", false);
+            }
+        }
     }
 
     private static Button MakeButton(string text)
@@ -192,6 +506,7 @@ internal sealed class MainForm : Form
         button.FlatAppearance.BorderColor = Color.FromArgb(55, 69, 94);
         button.BackColor = Color.FromArgb(31, 42, 61);
         button.ForeColor = DefaultText;
+        button.Font = new Font("Segoe UI", 8.5F);
         button.Padding = new Padding(8, 3, 8, 3);
         button.Margin = new Padding(0, 0, 6, 0);
     }

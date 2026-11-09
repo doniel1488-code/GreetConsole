@@ -5,19 +5,22 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
-        string logPath = ReadLogPath(args);
+        string logPath = ReadStringArgument(args, "--log") ?? Path.Combine(AppContext.BaseDirectory, "latest.log");
+        int commandPort = int.TryParse(ReadStringArgument(args, "--command-port"), out int parsedPort) ? parsedPort : 0;
+        string commandToken = ReadStringArgument(args, "--command-token") ?? "";
+
         ApplicationConfiguration.Initialize();
-        Application.Run(new MainForm(logPath));
+        Application.Run(new MainForm(logPath, commandPort, commandToken));
     }
 
-    private static string ReadLogPath(string[] args)
+    private static string? ReadStringArgument(string[] args, string name)
     {
         for (int i = 0; i + 1 < args.Length; i++)
         {
-            if (string.Equals(args[i], "--log", StringComparison.OrdinalIgnoreCase))
-                return Path.GetFullPath(args[i + 1]);
+            if (string.Equals(args[i], name, StringComparison.OrdinalIgnoreCase))
+                return args[i + 1];
         }
 
-        return Path.Combine(AppContext.BaseDirectory, "latest.log");
+        return null;
     }
 }

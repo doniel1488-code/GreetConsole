@@ -3,7 +3,7 @@
   "id": "greetconsole",
   "version": "${version}",
   "name": "GreetConsole",
-  "description": "Fabric client mod that launches a standalone C# Windows desktop window for live Minecraft logs.",
+  "description": "Fabric client mod with a standalone C# log window and a player command input.",
   "authors": [
     "Governix"
   ],
