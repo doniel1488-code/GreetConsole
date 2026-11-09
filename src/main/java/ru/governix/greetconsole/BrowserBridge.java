@@ -154,7 +154,7 @@ public final class BrowserBridge implements AutoCloseable {
         response.addProperty("ok", true);
         response.addProperty("token", token);
         response.addProperty("port", PORT);
-        response.addProperty("version", "1.3.3");
+        response.addProperty("version", "1.3.4");
         sendJson(exchange, 200, response);
     }
 
@@ -272,28 +272,47 @@ public final class BrowserBridge implements AutoCloseable {
     private boolean prepare(HttpExchange exchange, String expectedMethod) throws IOException {
         String origin = exchange.getRequestHeaders().getFirst("Origin");
         String normalizedOrigin = origin == null ? "" : origin.trim().replaceAll("/+$", "");
-        if (!EXTENSION_ORIGIN.equalsIgnoreCase(normalizedOrigin)) {
-            String received = origin == null ? "<Origin отсутствует>" : origin;
-            String method = exchange.getRequestMethod();
-            String path = exchange.getRequestURI().getPath();
-            sendError(exchange, 403,
-                    "Origin не совпадает. Получено: " + received
-                            + " | Ожидается: " + EXTENSION_ORIGIN
-                            + " | Запрос: " + method + " " + path);
-            return false;
+        String clientMarker = exchange.getRequestHeaders().getFirst("X-GreetConsole-Client");
+        boolean preflight = "OPTIONS".equalsIgnoreCase(exchange.getRequestMethod());
+
+        // Some Chromium-based browsers omit Origin on extension fetches to loopback.
+        // The extension sends a dedicated header on every request. A web page cannot
+        // send that non-simple header without a preflight, and preflights are still
+        // restricted to this exact extension origin.
+        if (preflight) {
+            String requestedHeaders = exchange.getRequestHeaders()
+                    .getFirst("Access-Control-Request-Headers");
+            boolean markerRequested = requestedHeaders != null
+                    && requestedHeaders.toLowerCase(java.util.Locale.ROOT)
+                    .contains("x-greetconsole-client");
+            if (!EXTENSION_ORIGIN.equalsIgnoreCase(normalizedOrigin) || !markerRequested) {
+                sendError(exchange, 403, "Предварительный запрос не прошёл проверку расширения.");
+                return false;
+            }
+        } else {
+            if (!"yandex-extension-v1".equals(clientMarker)) {
+                sendError(exchange, 403, "Не найден маркер клиента GreetConsole.");
+                return false;
+            }
+            if (origin != null && !EXTENSION_ORIGIN.equalsIgnoreCase(normalizedOrigin)) {
+                sendError(exchange, 403, "Origin не совпадает. Получено: " + origin
+                        + " | Ожидается: " + EXTENSION_ORIGIN);
+                return false;
+            }
         }
 
         Headers headers = exchange.getResponseHeaders();
         headers.set("Access-Control-Allow-Origin", EXTENSION_ORIGIN);
         headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        headers.set("Access-Control-Allow-Headers", "Content-Type, X-GreetConsole-Token");
+        headers.set("Access-Control-Allow-Headers",
+                "Content-Type, X-GreetConsole-Token, X-GreetConsole-Client");
         headers.set("Access-Control-Allow-Private-Network", "true");
         headers.set("Access-Control-Max-Age", "600");
         headers.set("Vary", "Origin");
         headers.set("Cache-Control", "no-store");
         headers.set("X-Content-Type-Options", "nosniff");
 
-        if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+        if (preflight) {
             exchange.sendResponseHeaders(204, -1);
             exchange.close();
             return false;
